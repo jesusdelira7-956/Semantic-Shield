@@ -3,7 +3,7 @@
 > **The Sovereign AI-Era Browser Firewall & Noise Filter.**  
 > Built for the post-AI era: Combines core ad & tracker blocking, an interactive loopback firewall for Local LLMs, real-time live request logging, and semantic filtering for generative AI clutter.
 
-[![Download Latest ZIP](https://img.shields.io/badge/⬇️_Download_Extension_ZIP-v2.0.0-00e5ff?style=for-the-badge)](https://github.com/jesusdelira7-956/Semantic-Shield/releases/latest/download/Semantic-Shield-v2.0.0.zip)
+[![Download Latest ZIP](https://img.shields.io/badge/⬇️_Download_Extension_ZIP-v2.0.1-00e5ff?style=for-the-badge)](https://github.com/jesusdelira7-956/Semantic-Shield/releases/latest/download/Semantic-Shield-v2.0.1.zip)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![Manifest: V3](https://img.shields.io/badge/Manifest-V3-success.svg?style=for-the-badge)](manifest.json)
 
@@ -111,10 +111,10 @@ It doesn't just block ads. It acts as an active security perimeter between the c
 ## 🚀 3 Easy Ways to Install in Chrome
 
 ### Method 1: Drag & Drop ZIP (Fastest — No Unzipping or Terminal Needed!)
-1. **[👉 Click Here to Download `Semantic-Shield-v2.0.0.zip`](https://github.com/jesusdelira7-956/Semantic-Shield/releases/latest/download/Semantic-Shield-v2.0.0.zip)**
+1. **[👉 Click Here to Download `Semantic-Shield-v2.0.1.zip`](https://github.com/jesusdelira7-956/Semantic-Shield/releases/latest/download/Semantic-Shield-v2.0.1.zip)**
 2. Open Chrome (or Brave / Edge) and go to **`chrome://extensions/`**
 3. Turn ON **Developer mode** (toggle in the top-right corner).
-4. **Drag and drop** the downloaded `Semantic-Shield-v2.0.0.zip` file directly from your downloads bar onto the `chrome://extensions/` page! *(Chrome installs root-packaged extension ZIPs automatically without needing to unzip first.)*
+4. **Drag and drop** the downloaded `Semantic-Shield-v2.0.1.zip` file directly from your downloads bar onto the `chrome://extensions/` page! *(Chrome installs root-packaged extension ZIPs automatically without needing to unzip first.)*
 
 ---
 

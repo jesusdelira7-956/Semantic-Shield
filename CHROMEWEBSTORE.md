@@ -4,7 +4,7 @@
 - **Name:** Semantic Shield
 - **Summary:** Sovereign ad, tracker, and local firewall shield with AI clutter filtering, live request logger, and self-healing element picker.
 - **Category:** Productivity / Privacy & Security
-- **Version:** 2.0.0
+- **Version:** 2.0.1
 - **Last Updated:** 2026-11-08
 
 ## Detailed Description
@@ -32,4 +32,5 @@ Semantic Shield is a sovereign content filtering and privacy extension built for
 - **Local-Only Processing:** All rule compilation, element analysis, and logging occur strictly inside your local browser instance.
 
 ## Version History
+- **v2.0.1 (2026-11-08):** Maintenance release ensuring full classic script conformance in content script heuristics engine.
 - **v2.0.0 (2026-11-08):** Initial sovereign release with Manifest V3 dynamic rule compiler, live logger side panel, GenAI clutter filter, self-healing element picker, and local LLM loopback firewall.
