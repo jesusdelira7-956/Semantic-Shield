@@ -1,5 +1,5 @@
 /**
- * Antigravity Semantic Shield - Visual Element Picker & Semantic Rule Builder
+ * Semantic Shield - Visual Element Picker & Semantic Rule Builder
  */
 
 (function () {
@@ -143,7 +143,7 @@
     if (tooltip) tooltip.style.display = 'none';
   }
 
-  window.AntigravityElementPicker = {
+  window.SemanticShieldElementPicker = {
     start: startPicker,
     stop: stopPicker,
   };

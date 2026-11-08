@@ -1,5 +1,5 @@
 /**
- * Antigravity Semantic Shield - Content Shield Script
+ * Semantic Shield - Content Shield Script
  * Enforces cosmetic hiding, GenAI widget blocking, self-healing semantic suppression,
  * and AI sludge collapsing with high-performance requestAnimationFrame batching.
  */
@@ -43,7 +43,7 @@
 
   // Inject Base Anti-Ad & GenAI Suppression CSS
   const styleEl = document.createElement('style');
-  styleEl.id = 'antigravity-semantic-shield-style';
+  styleEl.id = 'semantic-shield-style';
   document.documentElement.appendChild(styleEl);
 
   function updateDynamicStyles() {
@@ -200,8 +200,8 @@
   // Listen for picker activation message
   chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action === 'launchElementPicker') {
-      if (window.AntigravityElementPicker) {
-        window.AntigravityElementPicker.start();
+      if (window.SemanticShieldElementPicker) {
+        window.SemanticShieldElementPicker.start();
         sendResponse({ started: true });
       } else {
         sendResponse({ started: false, error: 'Picker module not loaded' });

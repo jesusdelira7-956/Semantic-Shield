@@ -46,9 +46,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v2.0.0
-          name: "Antigravity Semantic Shield v2.0.0 (Drag-and-Drop Chrome ZIP)"
+          name: "Semantic Shield v2.0.0 (Drag-and-Drop Chrome ZIP)"
           body: |
-            ### 🛡️ Antigravity Semantic Shield v2.0.0
+            ### 🛡️ Semantic Shield v2.0.0
             **Sovereign Manifest V3 Chrome Extension** with Local LLM Loopback Firewall, restored *My Filters* live compiler, real-time blocked request logger, and GenAI clutter shield.
 
             #### ⚡ Fastest Install (Drag & Drop — No Unzipping Needed!)

@@ -1,9 +1,9 @@
-# Privacy Policy for Antigravity Semantic Shield
+# Privacy Policy for Semantic Shield
 
 **Effective Date:** November 8, 2026  
 **Last Updated:** November 8, 2026
 
-Antigravity Semantic Shield ("the Extension") is an open-source, sovereign browser extension designed to protect your privacy and your local development environment.
+Semantic Shield ("the Extension") is an open-source, sovereign browser extension designed to protect your privacy and your local development environment.
 
 ### 1. Zero Data Collection
 The Extension **does not collect, store, transmit, or sell** any personal data, browsing history, keystrokes, IP addresses, or device identifiers.
@@ -32,5 +32,5 @@ This data is stored locally on your machine and is never transmitted to any exte
 The Extension does not use third-party analytics, remote tracking scripts, external CDNs, or telemetry servers.
 
 ### 6. Contact & Source Code
-Antigravity Semantic Shield is open source. You can inspect the source code, audit the privacy guarantees, or report issues directly on GitHub:  
+Semantic Shield is open source. You can inspect the source code, audit the privacy guarantees, or report issues directly on GitHub:  
 https://github.com/jesusdelira7-956/Semantic-Shield

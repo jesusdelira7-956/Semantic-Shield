@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Antigravity Semantic Shield - 1-Line Automated Installer (Linux & macOS)
+# Semantic Shield - 1-Line Automated Installer (Linux & macOS)
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/jesusdelira7-956/Semantic-Shield/main/install.sh | bash
 # ==============================================================================
@@ -9,10 +9,10 @@ set -euo pipefail
 
 REPO_URL="https://github.com/jesusdelira7-956/Semantic-Shield.git"
 ZIP_URL="https://github.com/jesusdelira7-956/Semantic-Shield/archive/refs/heads/main.zip"
-INSTALL_DIR="${HOME}/.local/share/antigravity-semantic-shield"
+INSTALL_DIR="${HOME}/.local/share/semantic-shield"
 
 echo "======================================================================"
-echo "  🛡️  ANTIGRAVITY SEMANTIC SHIELD - AUTOMATED INSTALLER"
+echo "  🛡️  SEMANTIC SHIELD - AUTOMATED INSTALLER"
 echo "======================================================================"
 
 mkdir -p "$(dirname "${INSTALL_DIR}")"
@@ -59,7 +59,7 @@ LAUNCHER="${BIN_DIR}/chrome-semantic-shield"
 
 cat << 'EOF' > "${LAUNCHER}"
 #!/usr/bin/env bash
-EXT_DIR="${HOME}/.local/share/antigravity-semantic-shield"
+EXT_DIR="${HOME}/.local/share/semantic-shield"
 for BROWSER in google-chrome google-chrome-stable chromium chromium-browser brave-browser; do
     if command -v "${BROWSER}" >/dev/null 2>&1; then
         exec "${BROWSER}" --load-extension="${EXT_DIR}" "$@"

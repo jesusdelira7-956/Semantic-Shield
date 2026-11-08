@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Antigravity Semantic Shield",
+  "name": "Semantic Shield",
   "version": "2.0.0",
   "description": "Sovereign ad, tracker & Local LLM loopback firewall with semantic AI sludge filter, live logger, and self-healing element picker.",
   "icons": {
@@ -45,7 +45,7 @@
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     },
-    "default_title": "Antigravity Semantic Shield"
+    "default_title": "Semantic Shield"
   },
   "side_panel": {
     "default_path": "sidepanel/sidepanel.html"

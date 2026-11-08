@@ -1,5 +1,5 @@
 /**
- * Antigravity Semantic Shield - Side Panel Controller
+ * Semantic Shield - Side Panel Controller
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dynamicRules = await chrome.declarativeNetRequest.getDynamicRules();
 
         const diagBundle = {
-          extension: 'Antigravity Semantic Shield',
+          extension: 'Semantic Shield',
           version: '2.0.0',
           timestamp: new Date().toISOString(),
           userAgent: navigator.userAgent,

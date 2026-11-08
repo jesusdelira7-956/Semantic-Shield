@@ -1,4 +1,4 @@
-# 🛡️ Antigravity Semantic Shield (v2.0)
+# 🛡️ Semantic Shield (v2.0)
 
 > **The Sovereign AI-Era Browser Firewall & Noise Filter.**  
 > Built for the post-AI era: Combines core ad & tracker blocking, an interactive loopback firewall for Local LLMs, real-time live request logging, and semantic filtering for generative AI clutter.
@@ -36,9 +36,9 @@ Modern browser standards and conventional ad blockers leave massive gaps:
 
 ---
 
-## ⚡ The Solution: Antigravity Semantic Shield
+## ⚡ The Solution: Semantic Shield
 
-**Antigravity Semantic Shield is the first dual-directional browser firewall engineered specifically for the post-AI era.**
+**Semantic Shield is the first dual-directional browser firewall engineered specifically for the post-AI era.**
 
 It doesn't just block ads. It acts as an active security perimeter between the chaotic public internet and your local machine, while restoring the power-user tools that modern browser transitions stripped away.
 
@@ -47,7 +47,7 @@ It doesn't just block ads. It acts as an active security perimeter between the c
                        │
                        ▼
     ╔════════════════════════════════════════╗
-    ║   ANTIGRAVITY SEMANTIC SHIELD (MV3)    ║
+    ║          SEMANTIC SHIELD (MV3)         ║
     ║  • Loopback Firewall (Blocks -> 127.x) ║
     ║  • Live MV3 Rule Compiler (My Filters) ║
     ║  • Real-Time Network Request Logger    ║
@@ -95,7 +95,7 @@ It doesn't just block ads. It acts as an active security perimeter between the c
 
 ## 📊 Comparison Matrix
 
-| Capability | Other Blockers | **Antigravity Semantic Shield (v2.0)** |
+| Capability | Other Blockers | **Semantic Shield (v2.0)** |
 | :--- | :---: | :---: |
 | **Local LLM Loopback Protection** | ❌ None | **✅ Built-In Pre-Compiled Firewall** |
 | **Manifest V3 Native & Future-Proof** | ⚠️ Restricted | **✅ Yes (Modular ES Worker)** |

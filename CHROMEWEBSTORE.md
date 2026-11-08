@@ -1,14 +1,14 @@
-# Chrome Web Store Listing: Antigravity Semantic Shield
+# Chrome Web Store Listing: Semantic Shield
 
 ## Listing Metadata
-- **Name:** Antigravity Semantic Shield
+- **Name:** Semantic Shield
 - **Summary:** Sovereign ad, tracker, and local firewall shield with AI clutter filtering, live request logger, and self-healing element picker.
 - **Category:** Productivity / Privacy & Security
 - **Version:** 2.0.0
 - **Last Updated:** 2026-11-08
 
 ## Detailed Description
-Antigravity Semantic Shield is a sovereign content filtering and privacy extension built for the modern web. It blocks intrusive advertisements, telemetry trackers, and local loopback probes while giving you intelligent tools to clean up generative AI clutter.
+Semantic Shield is a sovereign content filtering and privacy extension built for the modern web. It blocks intrusive advertisements, telemetry trackers, and local loopback probes while giving you intelligent tools to clean up generative AI clutter.
 
 ### Key Capabilities
 - **Local Network Firewall:** Protects local workstations and AI engines by blocking third-party websites from making background requests to local loopback ports (`127.0.0.1` and `localhost`).

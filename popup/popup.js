@@ -1,5 +1,5 @@
 /**
- * Antigravity Semantic Shield - Popup Controller
+ * Semantic Shield - Popup Controller
  */
 
 document.addEventListener('DOMContentLoaded', async () => {

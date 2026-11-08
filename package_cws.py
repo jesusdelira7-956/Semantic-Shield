@@ -2,7 +2,7 @@
 """
 package_cws.py
 ==============
-Packages Antigravity Semantic Shield into a clean, compliant ZIP file
+Packages Semantic Shield into a clean, compliant ZIP file
 ready for direct upload to the Google Chrome Web Store Developer Dashboard.
 
 Excludes:

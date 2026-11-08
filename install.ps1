@@ -1,17 +1,17 @@
 # ==============================================================================
-# Antigravity Semantic Shield - 1-Line Automated Installer (Windows PowerShell)
+# Semantic Shield - 1-Line Automated Installer (Windows PowerShell)
 # Usage:
 #   irm https://raw.githubusercontent.com/jesusdelira7-956/Semantic-Shield/main/install.ps1 | iex
 # ==============================================================================
 
 $ErrorActionPreference = "Stop"
 $ZipUrl = "https://github.com/jesusdelira7-956/Semantic-Shield/archive/refs/heads/main.zip"
-$InstallDir = Join-Path $env:LOCALAPPDATA "AntigravitySemanticShield"
+$InstallDir = Join-Path $env:LOCALAPPDATA "SemanticShield"
 $TempZip = Join-Path $env:TEMP "SemanticShield.zip"
 $TempExtract = Join-Path $env:TEMP "SemanticShieldExtract"
 
 Write-Host "======================================================================" -ForegroundColor Cyan
-Write-Host "  ANTIGRAVITY SEMANTIC SHIELD - WINDOWS AUTOMATED INSTALLER" -ForegroundColor Cyan
+Write-Host "  SEMANTIC SHIELD - WINDOWS AUTOMATED INSTALLER" -ForegroundColor Cyan
 Write-Host "======================================================================" -ForegroundColor Cyan
 
 Write-Host "[*] Downloading latest Semantic Shield release..."

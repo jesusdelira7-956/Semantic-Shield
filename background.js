@@ -1,11 +1,11 @@
 /**
- * Antigravity Semantic Shield - Background Service Worker (Manifest V3)
+ * Semantic Shield - Background Service Worker (Manifest V3)
  * Handles rule compilation, live network debug logging, badge stats, and message routing.
  */
 
 import { FilterCompiler } from './lib/filter_compiler.js';
 
-const DEFAULT_USER_FILTERS = `! === Antigravity Local LLM Loopback Protection ===
+const DEFAULT_USER_FILTERS = `! === Semantic Shield Local LLM Loopback Protection ===
 ||127.0.0.1^$domain=~127.0.0.1|~localhost
 ||localhost^$domain=~127.0.0.1|~localhost
 ||[::1]^$domain=~127.0.0.1|~localhost
@@ -21,7 +21,7 @@ const DEFAULT_USER_FILTERS = `! === Antigravity Local LLM Loopback Protection ==
 const MAX_LOG_ENTRIES = 150;
 
 chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log('[Antigravity Shield] Extension installed / updated:', details.reason);
+  console.log('[Semantic Shield] Extension installed / updated:', details.reason);
 
   const stored = await chrome.storage.local.get([
     'shieldActive',
@@ -73,10 +73,10 @@ async function compileAndApplyUserFilters(filterText) {
       dynamicRuleCount: dynamicRules.length,
     });
 
-    console.log(`[Antigravity Shield] Compiled ${dynamicRules.length} dynamic rules, ${cosmeticRules.length} cosmetic rules.`);
+    console.log(`[Semantic Shield] Compiled ${dynamicRules.length} dynamic rules, ${cosmeticRules.length} cosmetic rules.`);
     return { success: true, dynamicCount: dynamicRules.length, cosmeticCount: cosmeticRules.length, errors };
   } catch (err) {
-    console.error('[Antigravity Shield] Compilation failed:', err);
+    console.error('[Semantic Shield] Compilation failed:', err);
     return { success: false, error: err.message };
   }
 }

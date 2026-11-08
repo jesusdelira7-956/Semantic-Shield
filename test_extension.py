@@ -2,7 +2,7 @@
 """
 projects/antigravity_semantic_shield/test_extension.py
 ======================================================
-Automated Validation Suite for Antigravity Semantic Shield v2.0.
+Automated Validation Suite for Semantic Shield v2.0.
 Verifies Manifest V3 compliance, icon dimensions, DNR rule syntax, and file completeness.
 """
 
@@ -21,7 +21,7 @@ def test_manifest():
         data = json.load(f)
         
     assert data.get("manifest_version") == 3, "Must be Manifest V3"
-    assert data.get("name") == "Antigravity Semantic Shield"
+    assert data.get("name") == "Semantic Shield"
     assert "declarativeNetRequest" in data.get("permissions", [])
     assert "declarativeNetRequestFeedback" in data.get("permissions", [])
     assert "sidePanel" in data.get("permissions", [])
@@ -83,7 +83,7 @@ def test_frontend_assets():
     print(f"[+] All {len(required_files)} extension assets verified present & non-empty: OK")
 
 def main():
-    print("=== Testing Antigravity Semantic Shield Extension ===")
+    print("=== Testing Semantic Shield Extension ===")
     manifest = test_manifest()
     test_icons(manifest)
     test_dnr_rules()
