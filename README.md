@@ -45,10 +45,10 @@ Then open `chrome://extensions/`, enable **Developer mode**, click **Load unpack
 
 ## ⚡ What Makes This Different?
 
-Unlike stripped-down Manifest V3 blockers (such as uBlock Origin Lite), **Antigravity Semantic Shield** restores power-user capabilities and addresses modern AI-era web noise:
+Unlike stripped-down Manifest V3 blockers (and other blockers), **Antigravity Semantic Shield** restores power-user capabilities and addresses modern AI-era web noise:
 
 1. **Local LLM Loopback Firewall:** Blocks malicious or untrusted websites from silently firing background requests (`fetch`, `XHR`, `WebSocket`, DNS rebinding) to local AI engines (`127.0.0.1` and `localhost` ports `:8080`, `:11434`, `:8088`, `:8890`). Local sovereign dashboards (e.g. Open WebUI, App Hub) remain fully exempt.
-2. **Restored "My Filters" Rule Compiler:** Write standard uBlock/AdGuard network rules (`||domain^$domain=...`) and cosmetic selectors directly inside the side panel. Compiles live into Chrome's `declarativeNetRequest.updateDynamicRules` API.
+2. **Restored "My Filters" Rule Compiler:** Write standard adblock network rules (`||domain^$domain=...`) and cosmetic selectors directly inside the side panel. Compiles live into Chrome's `declarativeNetRequest.updateDynamicRules` API.
 3. **Real-Time Blocked Request Logger:** An interactive live stream of blocked requests showing timestamp, type, URL, and triggered rule ID via `declarativeNetRequestFeedback`.
 4. **Smart GenAI Clutter Shield:** 1-click removal of search engine AI summaries (Google AI Overviews), sidebar AI bots (X Grok, YouTube Ask AI), and shopping summaries (Amazon Rufus).
 5. **Semantic AI Sludge Collapser:** Automatically identifies formulaic, synthetic SEO filler text and collapses it behind a discreet banner.
@@ -68,7 +68,7 @@ Unlike stripped-down Manifest V3 blockers (such as uBlock Origin Lite), **Antigr
 │   ├── local_llm_shield.json  # Pre-compiled local loopback firewall rules
 │   └── core_ad_shield.json    # Core ad and tracking protection rules
 ├── lib/
-│   ├── filter_compiler.js     # Live compiler converting uBlock syntax to MV3 rules
+│   ├── filter_compiler.js     # Live compiler converting standard filter syntax to MV3 rules
 │   └── semantic_heuristics.js # GenAI widget signatures & self-healing DOM matcher
 ├── content/
 │   ├── content_shield.js      # Cosmetic rule enforcer & AI sludge collapser
