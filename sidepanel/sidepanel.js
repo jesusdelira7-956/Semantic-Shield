@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnGithubIssue) {
     btnGithubIssue.addEventListener('click', () => {
-      const issueUrl = 'https://github.com/jesusdelira7-956/Antigravity_Doc_Zorin/issues/new?title=[Bug]+Semantic+Shield+Report&labels=bug,extension';
+      const issueUrl = 'https://github.com/jesusdelira7-956/Semantic-Shield/issues/new?title=[Bug]+Semantic+Shield+Report&labels=bug,extension';
       chrome.tabs.create({ url: issueUrl });
     });
   }
