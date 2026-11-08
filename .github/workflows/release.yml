@@ -1,0 +1,61 @@
+name: Build & Publish Chrome Extension Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow for icon verification
+        run: pip install Pillow
+
+      - name: Run Manifest V3 & Asset Validation Suite
+        run: python3 test_extension.py
+
+      - name: Package Root-Level Drag-and-Drop Extension ZIP
+        run: |
+          mkdir -p dist
+          zip -r dist/Semantic-Shield-v2.0.0.zip \
+            manifest.json \
+            background.js \
+            icons/ \
+            rules/ \
+            lib/ \
+            content/ \
+            popup/ \
+            sidepanel/ \
+            README.md \
+            LICENSE
+
+      - name: Create or Update Latest GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.0
+          name: "Antigravity Semantic Shield v2.0.0 (Drag-and-Drop Chrome ZIP)"
+          body: |
+            ### 🛡️ Antigravity Semantic Shield v2.0.0
+            **Sovereign Manifest V3 Chrome Extension** with Local LLM Loopback Firewall, restored *My Filters* live compiler, real-time blocked request logger, and GenAI clutter shield.
+
+            #### ⚡ Fastest Install (Drag & Drop — No Unzipping Needed!)
+            1. Download **`Semantic-Shield-v2.0.0.zip`** below.
+            2. Open `chrome://extensions/` in Chrome (or Brave/Edge) and turn on **Developer mode** (top right).
+            3. **Drag and drop `Semantic-Shield-v2.0.0.zip`** directly onto the `chrome://extensions/` page!
+          files: dist/Semantic-Shield-v2.0.0.zip
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
