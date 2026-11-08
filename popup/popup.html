@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Antigravity Semantic Shield</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <div class="logo-dot"></div>
+      <span class="title">Semantic Shield</span>
+    </div>
+    <span class="version">v2.0</span>
+  </div>
+
+  <!-- Master Shield Card -->
+  <div class="card master-card">
+    <div class="card-row">
+      <div>
+        <div class="label">Protection Status</div>
+        <div class="status-indicator" id="status-text">Shield Active</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="shield-toggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="blocked-count">0</div>
+        <div class="stat-desc">Blocked Requests</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num highlight" id="loopback-status">LOCKED</div>
+        <div class="stat-desc">Local LLM Firewall</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI & Semantic Controls -->
+  <div class="section-title">AI NOISE & SLUDGE CONTROLS</div>
+  <div class="control-list">
+    <label class="control-item">
+      <div class="control-info">
+        <span class="control-name">GenAI Clutter Shield</span>
+        <span class="control-sub">Block Google AI Overviews, Grok, Rufus</span>
+      </div>
+      <input type="checkbox" id="genai-toggle" checked>
+    </label>
+
+    <label class="control-item">
+      <div class="control-info">
+        <span class="control-name">Collapse AI Sludge</span>
+        <span class="control-sub">Auto-fold synthetic robotic text blocks</span>
+      </div>
+      <input type="checkbox" id="sludge-toggle" checked>
+    </label>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-primary" id="btn-picker">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+      Pick & Heal Element
+    </button>
+    <button class="btn btn-secondary" id="btn-sidepanel">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>
+      Open Power Dashboard
+    </button>
+    <button class="btn btn-secondary" id="btn-feedback" style="font-size: 11px; padding: 6px 12px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      Help & Report Issue
+    </button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

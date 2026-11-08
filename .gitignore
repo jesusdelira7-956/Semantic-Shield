@@ -1,0 +1,17 @@
+# System & OS
+.DS_Store
+Thumbs.db
+
+# Chrome & Extension Artifacts
+_metadata/
+*.crx
+*.pem
+
+# Python / Test Cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local Temporary Files
+dist/
+*.log

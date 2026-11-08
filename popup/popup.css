@@ -1,0 +1,250 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  width: 310px;
+  background: #090d16;
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-dot {
+  width: 10px;
+  height: 10px;
+  background: #00e5ff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00e5ff;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+  color: #f8fafc;
+}
+
+.version {
+  font-size: 10px;
+  color: #64748b;
+  background: #1e293b;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid #1f293d;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-indicator {
+  font-size: 14px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.status-indicator.disabled {
+  color: #ef4444;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border-top: 1px solid #1f293d;
+  padding-top: 10px;
+}
+
+.stat-box {
+  background: #0b1120;
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  font-family: monospace;
+}
+
+.stat-num.highlight {
+  color: #00e5ff;
+}
+
+.stat-desc {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+.control-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.control-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111827;
+  border: 1px solid #1f293d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.control-item:hover {
+  border-color: #334155;
+}
+
+.control-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.control-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.control-sub {
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #334155;
+  transition: .2s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #00e5ff;
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+  background-color: #090d16;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: #0284c7;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0369a1;
+}
+
+.btn-secondary {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+
+.btn-secondary:hover {
+  background: #334155;
+  color: #f8fafc;
+}
