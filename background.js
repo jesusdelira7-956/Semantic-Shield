@@ -23,6 +23,18 @@ const MAX_LOG_ENTRIES = 150;
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('[Semantic Shield] Extension installed / updated:', details.reason);
 
+  // Pillar 2 Data Loss Prevention: Pre-update snapshot guard
+  if (details.reason === 'update') {
+    try {
+      const allLocal = await chrome.storage.local.get(null);
+      const backupKey = `backup_pre_upgrade_${details.previousVersion || 'v2'}_${Date.now()}`;
+      await chrome.storage.local.set({ [backupKey]: allLocal });
+      console.log(`[Semantic Shield] Safety snapshot saved to ${backupKey}`);
+    } catch (err) {
+      console.error('[Semantic Shield] Error creating pre-update snapshot:', err);
+    }
+  }
+
   const stored = await chrome.storage.local.get([
     'shieldActive',
     'blockGenAI',
@@ -31,6 +43,22 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     'blockLogs',
     'blockedCount',
   ]);
+
+  // Pillar 2: Cloud auto-recovery from chrome.storage.sync on fresh install/device change
+  if (details.reason === 'install') {
+    try {
+      const cloudSync = await chrome.storage.sync.get(['userFilters', 'semanticRules']);
+      if (cloudSync.userFilters) {
+        stored.userFilters = cloudSync.userFilters;
+        console.log('[Semantic Shield] Recovered user filters from Chrome Cloud Sync.');
+      }
+      if (cloudSync.semanticRules) {
+        await chrome.storage.local.set({ semanticRules: cloudSync.semanticRules });
+      }
+    } catch (err) {
+      console.warn('[Semantic Shield] Cloud sync recovery skipped:', err);
+    }
+  }
 
   const updates = {};
   if (stored.shieldActive === undefined) updates.shieldActive = true;
@@ -72,6 +100,11 @@ async function compileAndApplyUserFilters(filterText) {
       lastCompiledAt: Date.now(),
       dynamicRuleCount: dynamicRules.length,
     });
+
+    // Cloud Mirror (Storage Sync)
+    try {
+      await chrome.storage.sync.set({ userFilters: filterText });
+    } catch (_) {}
 
     console.log(`[Semantic Shield] Compiled ${dynamicRules.length} dynamic rules, ${cosmeticRules.length} cosmetic rules.`);
     return { success: true, dynamicCount: dynamicRules.length, cosmeticCount: cosmeticRules.length, errors };

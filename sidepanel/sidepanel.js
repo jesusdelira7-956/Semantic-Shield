@@ -156,8 +156,92 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // -------------------------------------------------------------
-  // 4. Help & Feedback Diagnostics
+  // 4. Help & Feedback Diagnostics & Backup / Restore
   // -------------------------------------------------------------
+  const btnExportBackup = document.getElementById('btn-export-backup');
+  const fileRestoreBackup = document.getElementById('file-restore-backup');
+  const backupStatus = document.getElementById('backup-status');
+
+  if (btnExportBackup) {
+    btnExportBackup.addEventListener('click', async () => {
+      try {
+        const stored = await chrome.storage.local.get(null);
+        const backupData = {
+          app: 'Semantic Shield',
+          version: '2.0.0',
+          exportedAt: new Date().toISOString(),
+          userFilters: stored.userFilters || '',
+          semanticRules: stored.semanticRules || [],
+          shieldActive: stored.shieldActive !== false,
+          blockGenAI: stored.blockGenAI !== false,
+          collapseSludge: stored.collapseSludge !== false,
+        };
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.download = `semantic-shield-backup-${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        if (backupStatus) {
+          backupStatus.textContent = '✓ Backup JSON exported successfully!';
+          backupStatus.style.color = '#10b981';
+        }
+      } catch (err) {
+        if (backupStatus) {
+          backupStatus.textContent = `Export failed: ${err.message}`;
+          backupStatus.style.color = '#ef4444';
+        }
+      }
+    });
+  }
+
+  if (fileRestoreBackup) {
+    fileRestoreBackup.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed.app !== 'Semantic Shield' && !parsed.userFilters) {
+            throw new Error('Invalid backup file format.');
+          }
+
+          const updates = {};
+          if (parsed.userFilters !== undefined) updates.userFilters = parsed.userFilters;
+          if (Array.isArray(parsed.semanticRules)) updates.semanticRules = parsed.semanticRules;
+          if (parsed.shieldActive !== undefined) updates.shieldActive = parsed.shieldActive;
+          if (parsed.blockGenAI !== undefined) updates.blockGenAI = parsed.blockGenAI;
+          if (parsed.collapseSludge !== undefined) updates.collapseSludge = parsed.collapseSludge;
+
+          await chrome.storage.local.set(updates);
+
+          // Trigger recompile of restored filters
+          if (updates.userFilters) {
+            chrome.runtime.sendMessage({ action: 'recompileFilters', filterText: updates.userFilters });
+          }
+
+          if (backupStatus) {
+            backupStatus.textContent = '✓ Backup restored successfully! Refreshing...';
+            backupStatus.style.color = '#10b981';
+          }
+          setTimeout(() => window.location.reload(), 1200);
+        } catch (err) {
+          if (backupStatus) {
+            backupStatus.textContent = `Restore failed: ${err.message}`;
+            backupStatus.style.color = '#ef4444';
+          }
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
   const btnExportDiag = document.getElementById('btn-export-diagnostics');
   const btnGithubIssue = document.getElementById('btn-github-issue');
   const feedbackStatus = document.getElementById('feedback-status');
