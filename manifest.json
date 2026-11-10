@@ -13,8 +13,6 @@
     "declarativeNetRequestFeedback",
     "storage",
     "sidePanel",
-    "scripting",
-    "tabs",
     "activeTab"
   ],
   "host_permissions": [

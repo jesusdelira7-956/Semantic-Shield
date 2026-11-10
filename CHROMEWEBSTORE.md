@@ -22,8 +22,6 @@ Semantic Shield is a sovereign content filtering and privacy extension built for
 - `declarativeNetRequestFeedback`: Streams real-time blocked request information to your personal live logger dashboard.
 - `storage`: Saves your custom filters, toggle states, and element rules securely on your local computer.
 - `sidePanel`: Displays your power-user dashboard and live request stream in Chrome's side panel.
-- `scripting`: Enables the interactive visual element picker when you choose to hide an element on a page.
-- `tabs`: Identifies the current window context to open the side panel and inspect the active domain.
 - `activeTab`: Grants temporary access to highlight and pick elements on the current webpage when clicked.
 - `<all_urls>` (Host Permission): Enables network rule blocking and element suppression across web pages you navigate to.
 
