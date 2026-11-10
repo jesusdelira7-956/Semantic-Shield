@@ -21,12 +21,10 @@ The Extension uses Chrome's `chrome.storage.local` API exclusively on your devic
 This data is stored locally on your machine and is never transmitted to any external server or third party.
 
 ### 4. Permissions & Usage
-- `declarativeNetRequest`: Used to block ad, tracking, and local loopback network requests before they fire.
-- `declarativeNetRequestFeedback`: Used exclusively to stream blocked request metadata to your personal on-screen debug logger.
-- `storage`: Used to save your settings and filter lists locally on your machine.
-- `sidePanel`: Used to display your power-user dashboard and live request stream in Chrome's side panel.
-- `scripting` & `activeTab`: Used temporarily when you click "Pick & Heal Element" to let you select and suppress unwanted elements on the active webpage.
-- `tabs`: Used to verify the current window context when opening the side panel.
+- `declarativeNetRequest`: Used to block ad, tracking, and local loopback network requests before they fire, without reading page content.
+- `storage`: Used to save your settings and filter lists locally on your machine (and mirror user filters to your own Chrome Sync account).
+- `sidePanel`: Used to display your power-user dashboard and filter editor in Chrome's side panel.
+- Content Scripts (`<all_urls>`): Runs the cosmetic element suppression, generative AI noise filter, and self-healing element picker directly inside the webpage DOM without exfiltrating any data.
 
 ### 5. Third-Party Services
 The Extension does not use third-party analytics, remote tracking scripts, external CDNs, or telemetry servers.
