@@ -116,8 +116,21 @@ async function compileAndApplyUserFilters(filterText) {
 
 /**
  * Live Network Request Debug Logger (available in developer unpacked mode)
+ *
+ * The Chrome Web Store build ships WITHOUT `declarativeNetRequestFeedback`
+ * (least-privilege policy), so `onRuleMatchedDebug` is undefined there. In that
+ * case fall back to Chrome's native per-tab block counter, which only needs the
+ * `declarativeNetRequest` permission.
  */
-if (chrome.declarativeNetRequest?.onRuleMatchedDebug) {
+const DEBUG_FEEDBACK_AVAILABLE = Boolean(chrome.declarativeNetRequest?.onRuleMatchedDebug);
+
+if (!DEBUG_FEEDBACK_AVAILABLE) {
+  chrome.declarativeNetRequest
+    .setExtensionActionOptions({ displayActionCountAsBadgeText: true })
+    .catch((err) => console.warn('[Semantic Shield] Badge action count unavailable:', err));
+}
+
+if (DEBUG_FEEDBACK_AVAILABLE) {
   chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(async (info) => {
     try {
       const { request, rule } = info;

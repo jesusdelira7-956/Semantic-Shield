@@ -12,11 +12,7 @@
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "storage",
-    "sidePanel",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "<all_urls>"
+    "sidePanel"
   ],
   "declarative_net_request": {
     "rule_resources": [

@@ -82,9 +82,21 @@ def test_frontend_assets():
         assert p.stat().st_size > 0, f"Asset is empty: {rf}"
     print(f"[+] All {len(required_files)} extension assets verified present & non-empty: OK")
 
+def test_least_privilege(manifest_data):
+    from audit_permissions import audit
+    for store_mode in (False, True):
+        violations, _ = audit(manifest_data, store_mode=store_mode)
+        label = "store" if store_mode else "dev"
+        assert not violations, f"Unused permissions ({label} build): {violations}"
+    for banned in ("tabs", "scripting", "activeTab"):
+        assert banned not in manifest_data.get("permissions", []), f"'{banned}' is not used by this extension"
+    assert not manifest_data.get("host_permissions"), "host_permissions not required (content_scripts self-grant)"
+    print("[+] Least-privilege permission audit (dev + store builds): OK")
+
 def main():
     print("=== Testing Semantic Shield Extension ===")
     manifest = test_manifest()
+    test_least_privilege(manifest)
     test_icons(manifest)
     test_dnr_rules()
     test_frontend_assets()

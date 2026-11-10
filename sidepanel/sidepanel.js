@@ -56,6 +56,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let allLogs = [];
 
+  // Store builds omit `declarativeNetRequestFeedback` (least privilege), so the
+  // per-request stream is only available when loaded unpacked in developer mode.
+  const liveStreamAvailable = Boolean(chrome.declarativeNetRequest?.onRuleMatchedDebug);
+  const loggerSubtitle = document.getElementById('logger-subtitle');
+  if (!liveStreamAvailable && loggerSubtitle) {
+    loggerSubtitle.textContent =
+      'Per-request stream is available in developer (unpacked) mode. Blocking remains fully active; the toolbar badge shows blocks per tab.';
+  }
+
   const { blockLogs = [] } = await chrome.storage.local.get('blockLogs');
   allLogs = blockLogs;
   renderLogs();

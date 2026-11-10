@@ -13,9 +13,12 @@ Excludes:
 """
 
 import os
+import sys
 import json
 import zipfile
 from pathlib import Path
+
+from audit_permissions import audit
 
 EXT_DIR = Path(__file__).resolve().parent
 DIST_DIR = EXT_DIR / "dist"
@@ -26,6 +29,7 @@ EXCLUDE_DIRS = {".git", ".github", "__pycache__", "dist", "_metadata"}
 EXCLUDE_FILES = {
     "test_extension.py",
     "package_cws.py",
+    "audit_permissions.py",
     ".gitignore",
     "README.md",
     "CHROMEWEBSTORE.md",
@@ -55,6 +59,18 @@ def build_package():
                     if "declarativeNetRequestFeedback" in mdata.get("permissions", []):
                         mdata["permissions"].remove("declarativeNetRequestFeedback")
                     clean_manifest_bytes = json.dumps(mdata, indent=2).encode("utf-8")
+
+                    # Least-privilege gate: abort if any shipped permission is unused
+                    violations, report = audit(mdata, store_mode=True)
+                    print("\n".join(report))
+                    if violations:
+                        zipf.close()
+                        CWS_ZIP.unlink(missing_ok=True)
+                        print("\n[FAIL] Packaging aborted - permission policy violations:")
+                        for v in violations:
+                            print(f"  - {v}")
+                        sys.exit(1)
+
                     zipf.writestr("manifest.json", clean_manifest_bytes)
                     print(f"  + manifest.json (CWS-sanitized: stripped dev-only declarativeNetRequestFeedback)")
                     continue
