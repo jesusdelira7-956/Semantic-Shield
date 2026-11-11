@@ -189,7 +189,9 @@ Encountered an issue or a broken website?
 
 Semantic Shield is 100% free, open-source, and sovereign software built to protect your private local AI stack. If this tool keeps your workstation secure or saves you development headaches, consider fueling further updates with a coffee:
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/JesseInTheLab)
+<a href="https://buymeacoffee.com/JesseInTheLab" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50" style="border-radius: 8px;">
+</a>
 
 ---
 
