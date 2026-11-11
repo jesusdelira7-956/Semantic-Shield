@@ -17,6 +17,10 @@ Semantic Shield is a sovereign content filtering and privacy extension built for
 - **Smart Generative AI Clutter Filter:** One-click toggles to remove search engine AI summaries, sidebar AI chatbots, and synthetic promotional blocks.
 - **Self-Healing Element Picker:** Interactively click and suppress unwanted page elements using multi-point structural signatures that survive randomized class changes.
 
+### Support Development
+If this extension keeps your local AI secure or saves you development headaches, consider fueling further updates with a coffee:
+https://buymeacoffee.com/JesseInTheLab
+
 ## Permissions Justification (Store Build — Least Privilege)
 - `declarativeNetRequest`: Blocks ad, tracker, and third-party loopback (`127.0.0.1` / `localhost`) requests via static and user-compiled dynamic rules, without reading page content. Also powers the per-tab blocked-request badge counter.
 - `storage`: Saves custom filters, toggle states, and picked-element rules locally (`chrome.storage.local`) and mirrors the user's filter list to their own Chrome Sync (`chrome.storage.sync`).

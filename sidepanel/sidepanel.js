@@ -298,4 +298,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       chrome.tabs.create({ url: issueUrl });
     });
   }
+
+  const btnBuyCoffee = document.getElementById('btn-buy-coffee');
+  if (btnBuyCoffee) {
+    btnBuyCoffee.addEventListener('click', () => {
+      chrome.tabs.create({ url: 'https://buymeacoffee.com/JesseInTheLab' });
+    });
+  }
 });

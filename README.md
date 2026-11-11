@@ -4,6 +4,7 @@
 > Built for the post-AI era: Combines core ad & tracker blocking, an interactive loopback firewall for Local LLMs, real-time live request logging, and semantic filtering for generative AI clutter.
 
 [![Download Latest ZIP](https://img.shields.io/badge/⬇️_Download_Extension_ZIP-v2.0.2-00e5ff?style=for-the-badge)](https://github.com/jesusdelira7-956/Semantic-Shield/releases/latest/download/Semantic-Shield-v2.0.2.zip)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/JesseInTheLab)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![Manifest: V3](https://img.shields.io/badge/Manifest-V3-success.svg?style=for-the-badge)](manifest.json)
 
@@ -181,6 +182,14 @@ Encountered an issue or a broken website?
 2. Navigate to the **Help & Feedback** tab.
 3. Click **Copy Diagnostic Bundle** to copy an anonymized debug snapshot to your clipboard.
 4. Click **Open GitHub Issue** and paste your diagnostic bundle.
+
+---
+
+## ☕ Support Development
+
+Semantic Shield is 100% free, open-source, and sovereign software built to protect your private local AI stack. If this tool keeps your workstation secure or saves you development headaches, consider fueling further updates with a coffee:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/JesseInTheLab)
 
 ---
 
