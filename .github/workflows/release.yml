@@ -30,7 +30,7 @@ jobs:
       - name: Package Root-Level Drag-and-Drop Extension ZIP
         run: |
           mkdir -p dist
-          zip -r dist/Semantic-Shield-v2.0.1.zip \
+          zip -r dist/Semantic-Shield-v2.0.2.zip \
             manifest.json \
             background.js \
             icons/ \
@@ -45,17 +45,17 @@ jobs:
       - name: Create or Update Latest GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.0.1
-          name: "Semantic Shield v2.0.1 (Drag-and-Drop Chrome ZIP)"
+          tag_name: v2.0.2
+          name: "Semantic Shield v2.0.2 (Drag-and-Drop Chrome ZIP)"
           body: |
-            ### 🛡️ Semantic Shield v2.0.1
-            **Sovereign Manifest V3 Chrome Extension** with Local LLM Loopback Firewall, restored *My Filters* live compiler, real-time blocked request logger, and GenAI clutter shield.
+            ### 🛡️ Semantic Shield v2.0.2
+            **Sovereign Manifest V3 Chrome Extension** with Local LLM Loopback Firewall, Docker & vLLM container protection, restored *My Filters* live compiler, real-time blocked request logger, and GenAI clutter shield.
 
             #### ⚡ Fastest Install (Drag & Drop — No Unzipping Needed!)
-            1. Download **`Semantic-Shield-v2.0.1.zip`** below.
+            1. Download **`Semantic-Shield-v2.0.2.zip`** below.
             2. Open `chrome://extensions/` in Chrome (or Brave/Edge) and turn on **Developer mode** (top right).
-            3. **Drag and drop `Semantic-Shield-v2.0.1.zip`** directly onto the `chrome://extensions/` page!
-          files: dist/Semantic-Shield-v2.0.1.zip
+            3. **Drag and drop `Semantic-Shield-v2.0.2.zip`** directly onto the `chrome://extensions/` page!
+          files: dist/Semantic-Shield-v2.0.2.zip
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const diagBundle = {
           extension: 'Semantic Shield',
-          version: '2.0.1',
+          version: '2.0.2',
           timestamp: new Date().toISOString(),
           userAgent: navigator.userAgent,
           shieldActive: stored.shieldActive !== false,
