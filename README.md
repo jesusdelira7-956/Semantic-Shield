@@ -11,13 +11,21 @@
 
 ## 🚨 The Unspoken Crisis: Your Web Browser is a Backdoor into Your Local AI
 
-If you run local AI models—whether using **Ollama (`:11434`)**, **`llama.cpp` / `llama-server` (`:8080`)**, **LM Studio (`:1234`)**, **vLLM**, or **Open WebUI (`:8081`)**—you probably believe you are operating in complete privacy and isolation because your servers bind to `127.0.0.1`.
+If you run local AI models—whether using **Ollama (`:11434`)**, **`llama.cpp` / `llama-server` (`:8080`)**, **vLLM (`:8000`)**, **LM Studio (`:1234`)**, **Open WebUI (`:8081`)**, or models inside **Docker containers**—you probably believe you are operating in complete privacy and isolation because your servers bind to `127.0.0.1`.
 
 **You are not.**
 
 Here is the dirty reality of modern web architecture: **`127.0.0.1` prevents connections from the outside internet, but it does NOT protect against code running inside your own browser.**
 
-Every time you visit a website, click an external link, or browse a page with third-party tracking scripts, JavaScript executes inside your browser. That JavaScript has direct network access to your machine's loopback interface.
+Every time you visit a website, click an external link, or browse a page with third-party tracking scripts, JavaScript executes inside your browser on your host machine. That JavaScript shares the exact same loopback network interface as your local AI engines and Docker port forwardings.
+
+### Why API Keys & Reverse Proxies Aren't the Whole Answer
+While setting up Caddy/Nginx reverse proxies, managing bearer tokens, and configuring API keys is sound security advice, it introduces **immense developer friction**:
+- It requires storing and exporting API tokens across every local CLI tool, curl script, and IDE plugin.
+- It breaks quick testing workflows and ephemeral Docker containers.
+- Non-technical developers and hobbyists rarely configure them, leaving their ports wide open.
+
+**Semantic Shield provides zero-touch defense-in-depth directly at the browser layer.** Third-party web pages cannot probe or trigger your local models, while your local terminal scripts, IDEs, and local WebUIs continue working seamlessly without requiring token management or proxy overhead.
 
 ### What an untrusted website can do while you browse:
 1. **VRAM Exhaustion & GPU Starvation (Local DoS):** A hidden background script can fire continuous automated `fetch('http://127.0.0.1:11434/api/generate')` loops, forcing your GPU to peg at 100% compute, draining critical VRAM headroom, and freezing your system.

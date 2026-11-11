@@ -95,21 +95,25 @@
       <div class="info-card">
         <div class="info-label">LOOPBACK FIREWALL STATUS</div>
         <div class="info-val secure">ACTIVE & LOCKED</div>
-        <div class="info-desc">Requests to 127.0.0.1 and localhost originating from public websites are blocked at the browser network layer.</div>
+        <div class="info-desc">Requests to 127.0.0.1, localhost, and [::1] originating from public websites are blocked at the browser network layer via DeclarativeNetRequest.</div>
       </div>
       <div class="info-card">
-        <div class="info-label">LOCAL RUNNER VAULT AUTH</div>
-        <div class="info-val secure">LAYER 3 ENFORCED</div>
-        <div class="info-desc">llama-server (:8080) and App Hub (:8890) require local 256-bit vault bearer tokens in .config/local_llm_auth.json.</div>
+        <div class="info-label">ZERO-CONFIG DOCKER & CONTAINER DEFENSE</div>
+        <div class="info-val secure">ZERO PROXY REQUIRED</div>
+        <div class="info-desc">Protects local containers, background engines, and port forwardings from browser CSRF without needing complex Caddy/Nginx reverse proxies or local API key management.</div>
       </div>
       <div class="info-card">
-        <div class="info-label">PROTECTED WORKSPACE PORTS</div>
+        <div class="info-label">PROTECTED LOCAL ENGINE PORTS</div>
         <div class="port-grid">
-          <span class="port-tag">:8080 llama-server</span>
-          <span class="port-tag">:8081 Open WebUI</span>
-          <span class="port-tag">:8088 DwarfStar ds4</span>
-          <span class="port-tag">:8890 App Hub</span>
           <span class="port-tag">:11434 Ollama</span>
+          <span class="port-tag">:8080 llama.cpp / llama-server</span>
+          <span class="port-tag">:8000 vLLM Engine</span>
+          <span class="port-tag">:1234 LM Studio</span>
+          <span class="port-tag">:8081 Open WebUI</span>
+          <span class="port-tag">:7860 Gradio / Text-Gen</span>
+          <span class="port-tag">:8088 DwarfStar ds4</span>
+          <span class="port-tag">:8890 Antigravity App Hub</span>
+          <span class="port-tag">All 127.0.0.1 Loopback Ports</span>
         </div>
       </div>
     </div>

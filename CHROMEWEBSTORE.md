@@ -11,7 +11,7 @@
 Semantic Shield is a sovereign content filtering and privacy extension built for the modern web. It blocks intrusive advertisements, telemetry trackers, and local loopback probes while giving you intelligent tools to clean up generative AI clutter.
 
 ### Key Capabilities
-- **Local Network Firewall:** Protects local workstations and AI engines by blocking third-party websites from making background requests to local loopback ports (`127.0.0.1` and `localhost`).
+- **Local Network Firewall:** Protects local workstations, Docker containers, and AI engines (Ollama, llama.cpp, vLLM, LM Studio) by blocking third-party websites from making unauthorized background requests to loopback ports (`127.0.0.1` and `localhost`).
 - **Dynamic Filter Editor ("My Filters"):** Write and compile custom network and cosmetic filtering rules with live updates.
 - **Live Blocked Request Logger:** Inspect blocked network requests in real time via an interactive side panel.
 - **Smart Generative AI Clutter Filter:** One-click toggles to remove search engine AI summaries, sidebar AI chatbots, and synthetic promotional blocks.
