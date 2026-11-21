@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const blockedCount = document.getElementById('blocked-count');
   const genaiToggle = document.getElementById('genai-toggle');
   const sludgeToggle = document.getElementById('sludge-toggle');
+  const ipiToggle = document.getElementById('ipi-toggle');
   const btnPicker = document.getElementById('btn-picker');
   const btnSidepanel = document.getElementById('btn-sidepanel');
   const btnFeedback = document.getElementById('btn-feedback');
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'blockedCount',
     'blockGenAI',
     'collapseSludge',
+    'scanIPI',
   ]);
 
   const isActive = data.shieldActive !== false;
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   blockedCount.textContent = (data.blockedCount || 0).toLocaleString();
   genaiToggle.checked = data.blockGenAI !== false;
   sludgeToggle.checked = data.collapseSludge !== false;
+  if (ipiToggle) ipiToggle.checked = data.scanIPI !== false;
 
   // Toggle Handlers
   shieldToggle.addEventListener('change', async () => {
@@ -42,6 +45,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   sludgeToggle.addEventListener('change', async () => {
     await chrome.storage.local.set({ collapseSludge: sludgeToggle.checked });
   });
+
+  if (ipiToggle) {
+    ipiToggle.addEventListener('change', async () => {
+      await chrome.storage.local.set({ scanIPI: ipiToggle.checked });
+    });
+  }
 
   function updateStatusDisplay(active) {
     statusText.textContent = active ? 'Shield Active' : 'Shield Disabled';

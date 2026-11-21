@@ -2,6 +2,8 @@
  * Semantic Shield - Side Panel Controller
  */
 
+import { SemanticBuiltInAI } from '../lib/builtin_ai.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Tabs Navigation
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -265,7 +267,165 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // -------------------------------------------------------------
-  // 4. Help & Feedback Diagnostics & Backup / Restore
+  // 4. Perimeter Inspector (IPI & WebMCP), Hardening Snippets & Built-in AI
+  // -------------------------------------------------------------
+  const btnInspectPage = document.getElementById('btn-inspect-page');
+  const btnClearIpi = document.getElementById('btn-clear-ipi');
+  const perimeterInspectResult = document.getElementById('perimeter-inspect-result');
+  const ipiAlertsList = document.getElementById('ipi-alerts-list');
+  const hardeningCopyStatus = document.getElementById('hardening-copy-status');
+  const builtinAiBadge = document.getElementById('builtin-ai-badge');
+  const nanoCheckInput = document.getElementById('nano-check-input');
+  const btnNanoVerify = document.getElementById('btn-nano-verify');
+  const nanoVerifyOutput = document.getElementById('nano-verify-output');
+
+  async function renderIpiAlerts() {
+    if (!ipiAlertsList) return;
+    ipiAlertsList.replaceChildren();
+    const { ipiAlerts = [] } = await chrome.storage.local.get('ipiAlerts');
+
+    if (ipiAlerts.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'color: #64748b; font-size: 11px;';
+      empty.textContent = 'No hidden indirect prompt injections recorded yet.';
+      ipiAlertsList.appendChild(empty);
+      return;
+    }
+
+    ipiAlerts.slice(0, 15).forEach((alert) => {
+      const card = document.createElement('div');
+      card.className = 'semantic-card';
+
+      const hdr = document.createElement('div');
+      hdr.className = 'semantic-card-header';
+
+      const tag = document.createElement('span');
+      tag.className = 'badge-blocked';
+      tag.textContent = `${String(alert.severity || 'high').toUpperCase()} • ${alert.hostname || 'page'}`;
+
+      const time = document.createElement('span');
+      time.style.cssText = 'font-size: 10px; color: #64748b;';
+      time.textContent = String(alert.timestamp || '');
+
+      hdr.append(tag, time);
+
+      const meta = document.createElement('div');
+      meta.className = 'semantic-desc';
+      meta.textContent = `Signals: ${(alert.matchedPatterns || []).join(', ')} (${(alert.reasons || []).join(', ')})`;
+
+      const snip = document.createElement('div');
+      snip.className = 'semantic-desc';
+      snip.textContent = `"${String(alert.snippet || '')}"`;
+
+      card.append(hdr, meta, snip);
+      ipiAlertsList.appendChild(card);
+    });
+  }
+
+  renderIpiAlerts();
+
+  if (btnInspectPage) {
+    btnInspectPage.addEventListener('click', async () => {
+      if (perimeterInspectResult) {
+        perimeterInspectResult.textContent = 'Inspecting active tab DOM & WebMCP hooks...';
+        perimeterInspectResult.style.color = '#94a3b8';
+      }
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab || !tab.id) {
+        if (perimeterInspectResult) {
+          perimeterInspectResult.textContent = 'No active tab available.';
+          perimeterInspectResult.style.color = '#f59e0b';
+        }
+        return;
+      }
+
+      chrome.tabs.sendMessage(tab.id, { action: 'inspectPageSecurity' }, (res) => {
+        if (chrome.runtime.lastError || !res) {
+          if (perimeterInspectResult) {
+            perimeterInspectResult.textContent =
+              'Unable to inspect this tab (refresh the webpage or try a standard http/https page).';
+            perimeterInspectResult.style.color = '#f59e0b';
+          }
+          return;
+        }
+
+        const hits = (res.ipiHitsOnPage || []).length;
+        const webmcpText = res.webmcpDetected
+          ? `WebMCP Exposed (${res.webmcpDeclarativeCount} declarative tool nodes)`
+          : 'No WebMCP tools exposed';
+        if (perimeterInspectResult) {
+          perimeterInspectResult.textContent = `${res.hostname}: ${webmcpText} • Hidden IPI hits on page: ${hits}`;
+          perimeterInspectResult.style.color = hits > 0 ? '#f59e0b' : '#10b981';
+        }
+        renderIpiAlerts();
+      });
+    });
+  }
+
+  if (btnClearIpi) {
+    btnClearIpi.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ action: 'clearIPIAlerts' }, () => {
+        renderIpiAlerts();
+      });
+    });
+  }
+
+  document.querySelectorAll('.copy-hardening-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const cmd = btn.dataset.cmd || '';
+      if (!cmd) return;
+      try {
+        await navigator.clipboard.writeText(cmd);
+        if (hardeningCopyStatus) {
+          hardeningCopyStatus.textContent = `✓ Copied: ${cmd}`;
+          hardeningCopyStatus.style.color = '#10b981';
+        }
+      } catch (err) {
+        if (hardeningCopyStatus) {
+          hardeningCopyStatus.textContent = `Copy error: ${err.message}`;
+          hardeningCopyStatus.style.color = '#ef4444';
+        }
+      }
+    });
+  });
+
+  async function initBuiltInAIStatus() {
+    const status = await SemanticBuiltInAI.getStatus();
+    if (builtinAiBadge) {
+      builtinAiBadge.textContent = status.supported ? `Nano: ${status.availability}` : 'Nano: Unavailable';
+    }
+    if (btnNanoVerify && !status.supported) {
+      btnNanoVerify.disabled = true;
+      btnNanoVerify.title = 'Chrome Built-in LanguageModel (Gemini Nano) is unavailable on this browser.';
+    }
+  }
+  initBuiltInAIStatus();
+
+  if (btnNanoVerify && nanoCheckInput) {
+    btnNanoVerify.addEventListener('click', async () => {
+      const sample = nanoCheckInput.value.trim();
+      if (!sample) return;
+      if (nanoVerifyOutput) {
+        nanoVerifyOutput.textContent = 'Running local Gemini Nano classification...';
+        nanoVerifyOutput.style.color = '#38bdf8';
+      }
+      try {
+        const result = await SemanticBuiltInAI.classifySuspiciousText(sample);
+        if (nanoVerifyOutput) {
+          nanoVerifyOutput.textContent = result;
+          nanoVerifyOutput.style.color = '#10b981';
+        }
+      } catch (err) {
+        if (nanoVerifyOutput) {
+          nanoVerifyOutput.textContent = err.message;
+          nanoVerifyOutput.style.color = '#f59e0b';
+        }
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // 5. Help & Feedback Diagnostics & Backup / Restore
   // -------------------------------------------------------------
   const btnExportBackup = document.getElementById('btn-export-backup');
   const fileRestoreBackup = document.getElementById('file-restore-backup');
@@ -284,6 +444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           shieldActive: stored.shieldActive !== false,
           blockGenAI: stored.blockGenAI !== false,
           collapseSludge: stored.collapseSludge !== false,
+          scanIPI: stored.scanIPI !== false,
         };
 
         const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -327,6 +488,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (parsed.shieldActive !== undefined) updates.shieldActive = parsed.shieldActive;
           if (parsed.blockGenAI !== undefined) updates.blockGenAI = parsed.blockGenAI;
           if (parsed.collapseSludge !== undefined) updates.collapseSludge = parsed.collapseSludge;
+          if (parsed.scanIPI !== undefined) updates.scanIPI = parsed.scanIPI;
 
           await chrome.storage.local.set(updates);
 

@@ -67,6 +67,7 @@ def test_frontend_assets():
         "background.js",
         "lib/filter_compiler.js",
         "lib/semantic_heuristics.js",
+        "lib/builtin_ai.js",
         "content/content_shield.js",
         "content/element_picker.js",
         "popup/popup.html",

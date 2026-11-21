@@ -87,34 +87,65 @@
   <div class="tab-content" id="tab-perimeter">
     <div class="panel-header">
       <div>
-        <h3>Workstation LLM Loopback Perimeter</h3>
-        <p class="subtitle">Hardware & local port defense status across your local workstation stack.</p>
+        <h3>Workstation LLM & MCP Perimeter</h3>
+        <p class="subtitle">0.0.0.0-Day defense, IPI guard, WebMCP inspection, and local endpoint hardening.</p>
       </div>
+      <span class="badge" id="builtin-ai-badge">Nano: Checking</span>
     </div>
     <div class="perimeter-cards">
       <div class="info-card">
-        <div class="info-label">LOOPBACK FIREWALL STATUS</div>
+        <div class="info-label">LOOPBACK & 0.0.0.0-DAY FIREWALL</div>
         <div class="info-val secure">ACTIVE & LOCKED</div>
-        <div class="info-desc">Requests to 127.0.0.1, localhost, and [::1] originating from public websites are blocked at the browser network layer via DeclarativeNetRequest.</div>
+        <div class="info-desc">Blocks unauthorized browser requests to <code>127.0.0.0/8</code>, <code>0.0.0.0</code> (CVE-2025-49596 class), <code>*.localhost</code>, <code>[::1]</code>, and <code>host.docker.internal</code> from external websites via DeclarativeNetRequest.</div>
       </div>
+
       <div class="info-card">
-        <div class="info-label">ZERO-CONFIG DOCKER & CONTAINER DEFENSE</div>
-        <div class="info-val secure">ZERO PROXY REQUIRED</div>
-        <div class="info-desc">Protects local containers, background engines, and port forwardings from browser CSRF without needing complex Caddy/Nginx reverse proxies or local API key management.</div>
-      </div>
-      <div class="info-card">
-        <div class="info-label">PROTECTED LOCAL ENGINE PORTS</div>
+        <div class="info-label">PROTECTED LOCAL ENGINE & MCP PORTS</div>
         <div class="port-grid">
           <span class="port-tag">:11434 Ollama</span>
-          <span class="port-tag">:8080 llama.cpp / llama-server</span>
-          <span class="port-tag">:8000 vLLM Engine</span>
+          <span class="port-tag">:8080 llama.cpp</span>
+          <span class="port-tag">:8000 vLLM</span>
           <span class="port-tag">:1234 LM Studio</span>
           <span class="port-tag">:8081 Open WebUI</span>
-          <span class="port-tag">:7860 Gradio / Text-Gen</span>
-          <span class="port-tag">:8088 DwarfStar ds4</span>
-          <span class="port-tag">:8890 Antigravity App Hub</span>
-          <span class="port-tag">All 127.0.0.1 Loopback Ports</span>
+          <span class="port-tag">:7860 Gradio</span>
+          <span class="port-tag">:6274 MCP Inspector</span>
+          <span class="port-tag">:49374 OpenCode v2</span>
+          <span class="port-tag">:8890 App Hub</span>
         </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-label">ACTIVE TAB IPI & WEBMCP INSPECTOR</div>
+        <div class="info-desc" style="margin-top: 6px;">
+          Check whether the active page exposes <code>navigator.modelContext</code> (WebMCP agent tools) or contains concealed Indirect Prompt Injections.
+        </div>
+        <div class="btn-group" style="margin-top: 8px;">
+          <button class="btn btn-primary" id="btn-inspect-page">🔍 Inspect Active Tab (IPI & WebMCP)</button>
+          <button class="btn btn-secondary" id="btn-clear-ipi">Clear Alerts</button>
+        </div>
+        <div class="status-bar" id="perimeter-inspect-result" style="margin-top: 8px;">Click Inspect to audit the current page.</div>
+        <div class="semantic-list" id="ipi-alerts-list" style="margin-top: 8px;"></div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-label">1-CLICK LOCAL DAEMON HARDENING FLAGS</div>
+        <div class="info-desc" style="margin-top: 6px;">Copy hardened loopback + API-key launch defaults for local AI backends:</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+          <button class="btn btn-secondary copy-hardening-btn" data-cmd="OLLAMA_HOST=127.0.0.1:11434 OLLAMA_ORIGINS=http://127.0.0.1:* ollama serve" style="text-align: left; font-family: monospace; overflow: hidden; text-overflow: ellipsis;">📋 OLLAMA_HOST=127.0.0.1:11434 ...</button>
+          <button class="btn btn-secondary copy-hardening-btn" data-cmd="llama-server --host 127.0.0.1 --port 8080 --api-key YOUR_SECRET_KEY" style="text-align: left; font-family: monospace; overflow: hidden; text-overflow: ellipsis;">📋 llama-server --host 127.0.0.1 --api-key ...</button>
+          <button class="btn btn-secondary copy-hardening-btn" data-cmd="vllm serve MODEL --host 127.0.0.1 --port 8000 --api-key YOUR_SECRET_KEY" style="text-align: left; font-family: monospace; overflow: hidden; text-overflow: ellipsis;">📋 vllm serve --host 127.0.0.1 --api-key ...</button>
+        </div>
+        <div class="status-bar" id="hardening-copy-status" style="margin-top: 6px;"></div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-label">CHROME BUILT-IN AI (GEMINI NANO) VERIFIER</div>
+        <div class="info-desc" style="margin-top: 6px;">Optionally test suspicious text locally with Chrome's on-device LanguageModel API (if hardware-supported).</div>
+        <input type="text" id="nano-check-input" placeholder="Paste suspicious snippet to classify locally..." style="width: 100%; margin-top: 8px;">
+        <div class="btn-group" style="margin-top: 8px;">
+          <button class="btn btn-secondary" id="btn-nano-verify">🧠 Verify with Gemini Nano</button>
+        </div>
+        <div class="status-bar" id="nano-verify-output" style="margin-top: 6px;"></div>
       </div>
     </div>
   </div>
@@ -185,6 +216,6 @@
     </div>
   </div>
 
-  <script src="sidepanel.js"></script>
+  <script type="module" src="sidepanel.js"></script>
 </body>
 </html>

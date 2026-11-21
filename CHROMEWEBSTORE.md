@@ -4,18 +4,18 @@
 - **Name:** Semantic Shield
 - **Summary:** Sovereign ad, tracker, and local firewall shield with AI clutter filtering, live request logger, and self-healing element picker.
 - **Category:** Productivity / Privacy & Security
-- **Version:** 2.0.2
-- **Last Updated:** 2026-11-10
+- **Version:** 2.1.0
+- **Last Updated:** 2026-11-21
 
 ## Detailed Description
-Semantic Shield is a sovereign content filtering and privacy extension built for the modern web. It blocks intrusive advertisements, telemetry trackers, and local loopback probes while giving you intelligent tools to clean up generative AI clutter.
+Semantic Shield is a sovereign content filtering and browser security extension built for the modern AI era. It protects local AI engines, MCP servers, and Docker containers from browser-originated CSRF/`0.0.0.0`-day probes while guarding browser agents against concealed Indirect Prompt Injections (IPI) and decluttering AI slop.
 
 ### Key Capabilities
-- **Local Network Firewall:** Protects local workstations, Docker containers, and AI engines (Ollama, llama.cpp, vLLM, LM Studio) by blocking third-party websites from making unauthorized background requests to loopback ports (`127.0.0.1` and `localhost`).
-- **Dynamic Filter Editor ("My Filters"):** Write and compile custom network and cosmetic filtering rules with live updates.
-- **Live Blocked Request Logger:** Inspect blocked network requests in real time via an interactive side panel.
-- **Smart Generative AI Clutter Filter:** One-click toggles to remove search engine AI summaries, sidebar AI chatbots, and synthetic promotional blocks.
-- **Self-Healing Element Picker:** Interactively click and suppress unwanted page elements using multi-point structural signatures that survive randomized class changes.
+- **Local Network, 0.0.0.0-Day & MCP Firewall:** Protects local workstations, Docker containers, MCP Inspector (`:6274`), OpenCode (`:49374`), Ollama (`:11434`), `llama.cpp` (`:8080`), vLLM (`:8000`), and LM Studio (`:1234`) by blocking external websites from hitting `127.0.0.0/8`, `0.0.0.0`, `*.localhost`, `[::1]`, or `host.docker.internal` via DeclarativeNetRequest.
+- **Indirect Prompt Injection (IPI) & WebMCP Guard:** Detects hidden prompt-hijacking directives embedded in HTML comments, `font-size: 0`, `opacity: 0`, off-screen CSS, or camouflaged elements, and inspects `navigator.modelContext` (WebMCP) tool exposure.
+- **Upgraded Tracker & Telemetry Shield + Dynamic Filter Editor ("My Filters"):** 65+ curated ad/session-replay/telemetry rules plus custom DNR network (`@@` allowlists + multi-type options) and CSS selector compilation.
+- **Smart Generative AI Clutter Filter & Domain-Scoped Self-Healing Picker:** Hides Google AI Overviews, Grok, and Rufus, and stores hostname-scoped multi-point element signatures.
+- **Chrome Built-in AI (Gemini Nano) Optional Verifier:** Feature-detects local Gemini Nano `LanguageModel` availability for offline snippet verification when hardware supports it.
 
 ### Support Development
 If this extension keeps your local AI secure or saves you development headaches, consider fueling further updates with a coffee:
@@ -39,6 +39,7 @@ https://buymeacoffee.com/JesseInTheLab
 - **Local-Only Processing:** All rule compilation, element analysis, and logging occur strictly inside your local browser instance.
 
 ## Version History
+- **v2.1.0 (2026-11-21):** Added `0.0.0.0`-Day (`CVE-2025-49596` class), full `127.0.0.0/8`, and `host.docker.internal` DNR rules; Indirect Prompt Injection (IPI) hidden-text detector & WebMCP inspector; master DNR toggle sync; domain-scoped self-healing rules; XSS-safe sidepanel DOM; Chrome Built-in AI (`LanguageModel`) optional verifier; and 68 curated static tracker/telemetry rules.
 - **v2.0.2 (2026-11-10):** Enhanced Workstation Perimeter UI with zero-config Docker container defense and expanded port matrix (Ollama :11434, llama.cpp :8080, vLLM :8000, LM Studio :1234, Open WebUI :8081).
 - **v2.0.1 (2026-11-09):** Least-privilege hardening (removed unused `tabs`, `scripting`, `activeTab`, and `<all_urls>` host permission; native DNR badge counter in store builds; automated permission audit gate) and classic-script fix for the content script heuristics engine.
 - **v2.0.0 (2026-11-08):** Initial sovereign release with Manifest V3 dynamic rule compiler, live logger side panel, GenAI clutter filter, self-healing element picker, and local LLM loopback firewall.

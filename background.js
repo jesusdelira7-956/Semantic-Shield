@@ -131,10 +131,12 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     'shieldActive',
     'blockGenAI',
     'collapseSludge',
+    'scanIPI',
     'userFilters',
     'blockLogs',
     'blockedCount',
     'semanticRules',
+    'ipiAlerts',
   ]);
 
   // Pillar 2: Cloud auto-recovery from chrome.storage.sync on fresh install/device change
@@ -158,8 +160,10 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (stored.shieldActive === undefined) updates.shieldActive = true;
   if (stored.blockGenAI === undefined) updates.blockGenAI = true;
   if (stored.collapseSludge === undefined) updates.collapseSludge = true;
+  if (stored.scanIPI === undefined) updates.scanIPI = true;
   if (stored.blockedCount === undefined) updates.blockedCount = 0;
   if (!stored.blockLogs) updates.blockLogs = [];
+  if (!stored.ipiAlerts) updates.ipiAlerts = [];
   if (!stored.userFilters) updates.userFilters = DEFAULT_USER_FILTERS;
 
   if (Object.keys(updates).length > 0) {
@@ -303,6 +307,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           await chrome.storage.sync.set({ semanticRules: nextRules });
         } catch (_) {}
         sendResponse({ success: true, count: nextRules.length });
+      } else if (message.action === 'recordIPIAlert' && message.alert) {
+        const { ipiAlerts = [] } = await chrome.storage.local.get('ipiAlerts');
+        ipiAlerts.unshift(message.alert);
+        if (ipiAlerts.length > 50) ipiAlerts.length = 50;
+        await chrome.storage.local.set({ ipiAlerts });
+        sendResponse({ success: true, count: ipiAlerts.length });
+      } else if (message.action === 'clearIPIAlerts') {
+        await chrome.storage.local.set({ ipiAlerts: [] });
+        sendResponse({ success: true });
       } else {
         sendResponse({ status: 'unknown_action' });
       }

@@ -1,8 +1,8 @@
 /**
  * Semantic Shield - Content Shield Script
  * Enforces validated cosmetic hiding, catalog-driven GenAI widget blocking,
- * domain-scoped self-healing semantic suppression, and AI sludge collapsing
- * with debounced MutationObserver + WeakSet tracking.
+ * domain-scoped self-healing semantic suppression, AI sludge collapsing,
+ * and Indirect Prompt Injection (IPI) hidden-text defense.
  * Classic content script (no top-level ES module export/import).
  */
 
@@ -13,13 +13,16 @@
     shieldActive: true,
     blockGenAI: true,
     collapseSludge: true,
+    scanIPI: true,
     cosmeticRules: [],
     semanticRules: [],
   };
 
-  // Track checked / suppressed nodes without mutating DOM attributes
   const suppressedNodes = new WeakSet();
   const checkedSludgeNodes = new WeakSet();
+  const scannedIpiNodes = new WeakSet();
+  let ipiHitsOnPage = [];
+  let recordedSignatures = new Set();
   let lastAppliedCss = '';
 
   try {
@@ -27,6 +30,7 @@
       'shieldActive',
       'blockGenAI',
       'collapseSludge',
+      'scanIPI',
       'cosmeticRules',
       'semanticRules',
     ]);
@@ -60,14 +64,12 @@
     const currentHost = window.location.hostname || '';
     const rawSelectors = [];
 
-    // 1. Generic & Domain Cosmetic Rules
     for (const rule of config.cosmeticRules || []) {
       if (rule && rule.selector && (rule.domain === '*' || currentHost.includes(rule.domain))) {
         rawSelectors.push(rule.selector);
       }
     }
 
-    // 2. Single Source of Truth GenAI Catalog from SemanticHeuristics
     if (config.blockGenAI && Array.isArray(window.GENAI_WIDGET_CATALOG)) {
       for (const entry of window.GENAI_WIDGET_CATALOG) {
         if (!entry.domain || currentHost.includes(entry.domain)) {
@@ -76,7 +78,6 @@
       }
     }
 
-    // Validate every selector independently so one malformed rule never breaks the sheet
     const validSelectors = [];
     const seen = new Set();
     const isValid = window.SemanticHeuristics?.isValidCssSelector;
@@ -102,7 +103,6 @@
 
   updateDynamicStyles();
 
-  // Debounced + rAF-batched DOM scan
   let debounceTimer = null;
   let rafPending = false;
 
@@ -123,6 +123,169 @@
     }, 150);
   }
 
+  function detectConcealmentReasons(el) {
+    const reasons = [];
+    if (el.getAttribute('aria-hidden') === 'true') {
+      reasons.push('aria-hidden');
+    }
+
+    let cs;
+    try {
+      cs = window.getComputedStyle(el);
+    } catch (_) {
+      return reasons;
+    }
+
+    if (cs.opacity === '0') reasons.push('opacity-0');
+    const fontSize = parseFloat(cs.fontSize);
+    if (!Number.isNaN(fontSize) && fontSize <= 1) reasons.push('zero-font');
+    if (cs.display === 'none' || cs.visibility === 'hidden') reasons.push('hidden-css');
+
+    const leftVal = parseFloat(cs.left);
+    if (!Number.isNaN(leftVal) && leftVal <= -5000) reasons.push('offscreen-left');
+
+    if (
+      cs.color &&
+      cs.backgroundColor &&
+      cs.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
+      cs.backgroundColor !== 'transparent' &&
+      cs.color === cs.backgroundColor
+    ) {
+      reasons.push('same-color-camouflage');
+    }
+
+    return reasons;
+  }
+
+  function renderIpiWarningPill() {
+    if (!document.body || ipiHitsOnPage.length === 0) return;
+    let banner = document.getElementById('ag-ipi-warning-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'ag-ipi-warning-banner';
+      banner.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 2147483645;
+        background: #1e1b4b;
+        border: 1px solid #f59e0b;
+        color: #fef3c7;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      `;
+
+      const textSpan = document.createElement('span');
+      textSpan.id = 'ag-ipi-warning-text';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.textContent = 'Dismiss';
+      closeBtn.style.cssText = `
+        background: #f59e0b;
+        color: #0f172a;
+        border: none;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+      `;
+      closeBtn.addEventListener('click', () => {
+        banner.style.display = 'none';
+        banner.dataset.dismissed = 'true';
+      });
+
+      banner.append(textSpan, closeBtn);
+      document.body.appendChild(banner);
+    }
+
+    if (banner.dataset.dismissed === 'true') return;
+    const textSpan = document.getElementById('ag-ipi-warning-text');
+    if (textSpan) {
+      textSpan.textContent = `🛡️ Semantic Shield: Hidden Prompt Injection Flagged (${ipiHitsOnPage.length})`;
+    }
+  }
+
+  function recordIpiHit(text, evalRes) {
+    const snippet = text.trim().replace(/\s+/g, ' ').slice(0, 140);
+    const key = `${evalRes.matchedPatterns.join(',')}:${snippet.slice(0, 50)}`;
+    if (recordedSignatures.has(key)) return;
+    recordedSignatures.add(key);
+
+    const hit = {
+      hostname: window.location.hostname || 'unknown',
+      severity: evalRes.severity,
+      reasons: evalRes.reasons,
+      matchedPatterns: evalRes.matchedPatterns,
+      snippet,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    ipiHitsOnPage.push(hit);
+    renderIpiWarningPill();
+
+    try {
+      chrome.runtime.sendMessage({ action: 'recordIPIAlert', alert: hit }).catch(() => {});
+    } catch (_) {}
+  }
+
+  function scanForHiddenIPI() {
+    const heuristics = window.SemanticHeuristics;
+    if (!heuristics || typeof heuristics.evaluateIPIRisk !== 'function') return;
+
+    // 1. Inspect HTML comments via TreeWalker
+    try {
+      const walker = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_COMMENT);
+      let node;
+      let commentCount = 0;
+      while ((node = walker.nextNode()) && commentCount < 250) {
+        commentCount++;
+        if (scannedIpiNodes.has(node)) continue;
+        scannedIpiNodes.add(node);
+
+        const commentText = (node.nodeValue || '').trim();
+        if (commentText.length > 20) {
+          const res = heuristics.evaluateIPIRisk(commentText, ['html-comment']);
+          if (res.isSuspicious) {
+            recordIpiHit(commentText, res);
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 2. Inspect concealed DOM text elements
+    if (!document.body) return;
+    const nodes = document.body.querySelectorAll('p, span, div, section, aside, blockquote, pre, code');
+    const limit = Math.min(nodes.length, 400);
+
+    for (let i = 0; i < limit; i++) {
+      const el = nodes[i];
+      if (scannedIpiNodes.has(el) || suppressedNodes.has(el)) continue;
+      if (el.id && el.id.startsWith('ag-')) continue;
+      scannedIpiNodes.add(el);
+
+      if (el.children.length > 8) continue;
+      const text = (el.textContent || '').trim();
+      if (text.length < 20 || text.length > 4000) continue;
+
+      const reasons = detectConcealmentReasons(el);
+      if (reasons.includes('aria-hidden') && text.length <= 40 && reasons.length === 1) {
+        continue;
+      }
+
+      const res = heuristics.evaluateIPIRisk(text, reasons);
+      if (res.isSuspicious) {
+        recordIpiHit(text, res);
+      }
+    }
+  }
+
   function runDOMPass() {
     updateDynamicStyles();
     if (!config.shieldActive) return;
@@ -131,7 +294,7 @@
     const heuristics = window.SemanticHeuristics;
     if (!heuristics) return;
 
-    // 1. Apply Domain-Scoped Self-Healing Semantic Signatures (skip scan if none match this host)
+    // 1. Apply Domain-Scoped Self-Healing Semantic Signatures
     const hostRules = (config.semanticRules || []).filter((sig) =>
       heuristics.matchesHostname(sig, currentHost)
     );
@@ -168,6 +331,11 @@
           }
         }
       }
+    }
+
+    // 3. Scan for Indirect Prompt Injection (IPI)
+    if (config.scanIPI !== false) {
+      scanForHiddenIPI();
     }
   }
 
@@ -214,11 +382,9 @@
     el.parentNode.insertBefore(banner, el);
   }
 
-  // MutationObserver to clean dynamic SPA elements
   const observer = new MutationObserver((mutations) => {
-    // Ignore mutations triggered only by our own style tag or collapsed banners
     for (const m of mutations) {
-      if (m.target === styleEl) continue;
+      if (m.target === styleEl || (m.target.id && m.target.id === 'ag-ipi-warning-banner')) continue;
       scheduleDOMClean();
       return;
     }
@@ -236,15 +402,34 @@
     });
   }
 
-  // Listen for picker activation message
   chrome.runtime.onMessage.addListener((req, _sender, sendResponse) => {
-    if (req && req.action === 'launchElementPicker') {
+    if (!req) return;
+
+    if (req.action === 'launchElementPicker') {
       if (window.SemanticShieldElementPicker) {
         window.SemanticShieldElementPicker.start();
         sendResponse({ started: true });
       } else {
         sendResponse({ started: false, error: 'Picker module not loaded' });
       }
+      return;
+    }
+
+    if (req.action === 'inspectPageSecurity') {
+      if (config.scanIPI !== false) {
+        scanForHiddenIPI();
+      }
+      const declarativeTools = document.querySelectorAll('[toolname], [tooldescription]');
+      const webmcpDetected =
+        (typeof navigator !== 'undefined' && 'modelContext' in navigator) ||
+        declarativeTools.length > 0;
+
+      sendResponse({
+        hostname: window.location.hostname || 'unknown',
+        webmcpDetected,
+        webmcpDeclarativeCount: declarativeTools.length,
+        ipiHitsOnPage: ipiHitsOnPage.slice(),
+      });
     }
   });
 })();
