@@ -1,6 +1,7 @@
 /**
  * Semantic Shield - Background Service Worker (Manifest V3)
- * Handles rule compilation, live network debug logging, badge stats, and message routing.
+ * Handles rule compilation, master shield DNR toggle, live network debug logging,
+ * badge stats, and message routing.
  */
 
 import { FilterCompiler } from './lib/filter_compiler.js';
@@ -19,16 +20,107 @@ const DEFAULT_USER_FILTERS = `! === Semantic Shield Local LLM Loopback Protectio
 `;
 
 const MAX_LOG_ENTRIES = 150;
+const STATIC_RULESETS = ['ruleset_local_llm', 'ruleset_core_ads'];
+const DEBUG_FEEDBACK_AVAILABLE = Boolean(chrome.declarativeNetRequest?.onRuleMatchedDebug);
+
+function applyBadgeCounterStyle() {
+  if (!DEBUG_FEEDBACK_AVAILABLE) {
+    chrome.declarativeNetRequest
+      .setExtensionActionOptions({ displayActionCountAsBadgeText: true })
+      .catch((err) => console.warn('[Semantic Shield] Badge action count unavailable:', err));
+  }
+}
+
+applyBadgeCounterStyle();
+
+/**
+ * Synchronizes Chrome DeclarativeNetRequest rulesets & dynamic rules with master shieldActive toggle.
+ */
+async function syncShieldState(isActive) {
+  try {
+    if (!isActive) {
+      await chrome.declarativeNetRequest.updateEnabledRulesets({
+        disableRulesetIds: STATIC_RULESETS,
+      });
+      const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+      if (existingRules.length > 0) {
+        await chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: existingRules.map((r) => r.id),
+        });
+      }
+      if (!DEBUG_FEEDBACK_AVAILABLE) {
+        await chrome.declarativeNetRequest.setExtensionActionOptions({
+          displayActionCountAsBadgeText: false,
+        }).catch(() => {});
+      }
+      await chrome.action.setBadgeText({ text: 'OFF' });
+      await chrome.action.setBadgeBackgroundColor({ color: '#64748b' });
+      console.log('[Semantic Shield] Master toggle OFF: DNR rulesets & dynamic rules paused.');
+      return;
+    }
+
+    await chrome.declarativeNetRequest.updateEnabledRulesets({
+      enableRulesetIds: STATIC_RULESETS,
+    });
+
+    const { userFilters = DEFAULT_USER_FILTERS, blockedCount = 0 } = await chrome.storage.local.get([
+      'userFilters',
+      'blockedCount',
+    ]);
+    await compileAndApplyUserFilters(userFilters);
+
+    if (DEBUG_FEEDBACK_AVAILABLE) {
+      await chrome.action.setBadgeText({
+        text: blockedCount > 0 ? String(blockedCount > 999 ? '999+' : blockedCount) : '',
+      });
+      await chrome.action.setBadgeBackgroundColor({ color: '#00e5ff' });
+    } else {
+      await chrome.action.setBadgeText({ text: '' });
+      applyBadgeCounterStyle();
+    }
+    console.log('[Semantic Shield] Master toggle ON: DNR rulesets & dynamic rules active.');
+  } catch (err) {
+    console.error('[Semantic Shield] Failed to sync shield state:', err);
+  }
+}
+
+// Keep DNR state synchronized when shieldActive is toggled from Popup or Storage
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.shieldActive) {
+    syncShieldState(changes.shieldActive.newValue !== false);
+  }
+});
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('[Semantic Shield] Extension installed / updated:', details.reason);
 
-  // Pillar 2 Data Loss Prevention: Pre-update snapshot guard
+  // Pillar 2 Data Loss Prevention: Pre-update snapshot guard (strip old snapshots to avoid 2^N bloat)
   if (details.reason === 'update') {
     try {
       const allLocal = await chrome.storage.local.get(null);
+      const snapshotPayload = {};
+      const existingBackupKeys = [];
+
+      for (const [k, v] of Object.entries(allLocal)) {
+        if (k.startsWith('backup_pre_upgrade_')) {
+          existingBackupKeys.push(k);
+        } else {
+          snapshotPayload[k] = v;
+        }
+      }
+
       const backupKey = `backup_pre_upgrade_${details.previousVersion || 'v2'}_${Date.now()}`;
-      await chrome.storage.local.set({ [backupKey]: allLocal });
+      await chrome.storage.local.set({ [backupKey]: snapshotPayload });
+
+      const allBackupKeys = [...existingBackupKeys, backupKey].sort((a, b) => {
+        const tsA = Number(a.split('_').pop()) || 0;
+        const tsB = Number(b.split('_').pop()) || 0;
+        return tsA - tsB;
+      });
+      if (allBackupKeys.length > 2) {
+        await chrome.storage.local.remove(allBackupKeys.slice(0, allBackupKeys.length - 2));
+      }
+
       console.log(`[Semantic Shield] Safety snapshot saved to ${backupKey}`);
     } catch (err) {
       console.error('[Semantic Shield] Error creating pre-update snapshot:', err);
@@ -42,6 +134,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     'userFilters',
     'blockLogs',
     'blockedCount',
+    'semanticRules',
   ]);
 
   // Pillar 2: Cloud auto-recovery from chrome.storage.sync on fresh install/device change
@@ -52,7 +145,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         stored.userFilters = cloudSync.userFilters;
         console.log('[Semantic Shield] Recovered user filters from Chrome Cloud Sync.');
       }
-      if (cloudSync.semanticRules) {
+      if (Array.isArray(cloudSync.semanticRules) && cloudSync.semanticRules.length > 0) {
+        stored.semanticRules = cloudSync.semanticRules;
         await chrome.storage.local.set({ semanticRules: cloudSync.semanticRules });
       }
     } catch (err) {
@@ -72,9 +166,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.storage.local.set(updates);
   }
 
-  // Initial compilation of User Filters into DNR Dynamic Rules
-  const filtersToCompile = updates.userFilters || stored.userFilters || DEFAULT_USER_FILTERS;
-  await compileAndApplyUserFilters(filtersToCompile);
+  const isActive = (updates.shieldActive ?? stored.shieldActive) !== false;
+  await syncShieldState(isActive);
 });
 
 /**
@@ -85,7 +178,6 @@ async function compileAndApplyUserFilters(filterText) {
     const compiler = new FilterCompiler(10000);
     const { dynamicRules, cosmeticRules, errors } = compiler.compile(filterText);
 
-    // Fetch existing dynamic rules to clear old ones
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
     const removeRuleIds = existingRules.map((r) => r.id);
 
@@ -101,7 +193,6 @@ async function compileAndApplyUserFilters(filterText) {
       dynamicRuleCount: dynamicRules.length,
     });
 
-    // Cloud Mirror (Storage Sync)
     try {
       await chrome.storage.sync.set({ userFilters: filterText });
     } catch (_) {}
@@ -116,20 +207,7 @@ async function compileAndApplyUserFilters(filterText) {
 
 /**
  * Live Network Request Debug Logger (available in developer unpacked mode)
- *
- * The Chrome Web Store build ships WITHOUT `declarativeNetRequestFeedback`
- * (least-privilege policy), so `onRuleMatchedDebug` is undefined there. In that
- * case fall back to Chrome's native per-tab block counter, which only needs the
- * `declarativeNetRequest` permission.
  */
-const DEBUG_FEEDBACK_AVAILABLE = Boolean(chrome.declarativeNetRequest?.onRuleMatchedDebug);
-
-if (!DEBUG_FEEDBACK_AVAILABLE) {
-  chrome.declarativeNetRequest
-    .setExtensionActionOptions({ displayActionCountAsBadgeText: true })
-    .catch((err) => console.warn('[Semantic Shield] Badge action count unavailable:', err));
-}
-
 if (DEBUG_FEEDBACK_AVAILABLE) {
   chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(async (info) => {
     try {
@@ -155,13 +233,11 @@ if (DEBUG_FEEDBACK_AVAILABLE) {
       const newCount = (data.blockedCount || 0) + 1;
       await chrome.storage.local.set({ blockLogs: logs, blockedCount: newCount });
 
-      // Update badge
       await chrome.action.setBadgeText({ text: String(newCount > 999 ? '999+' : newCount) });
       await chrome.action.setBadgeBackgroundColor({ color: '#00e5ff' });
 
-      // Notify open sidepanel / popup if listening
       chrome.runtime.sendMessage({ action: 'newBlockLog', entry: logEntry }).catch(() => {});
-    } catch (err) {
+    } catch (_) {
       // Ignore background race errors
     }
   });
@@ -174,27 +250,59 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
       if (message.action === 'recompileFilters') {
+        const { shieldActive = true } = await chrome.storage.local.get('shieldActive');
+        if (shieldActive === false) {
+          await chrome.storage.local.set({ userFilters: message.filterText });
+          sendResponse({
+            success: true,
+            dynamicCount: 0,
+            cosmeticCount: 0,
+            errors: ['Shield is currently paused; rules saved and will activate when resumed.'],
+          });
+          return;
+        }
         const res = await compileAndApplyUserFilters(message.filterText);
         sendResponse(res);
       } else if (message.action === 'openSidePanel') {
-        const windowId = sender.tab?.windowId || message.windowId;
-        if (windowId) {
-          await chrome.sidePanel.open({ windowId });
-          sendResponse({ success: true });
-        } else {
-          const currentWindow = await chrome.windows.getCurrent();
-          await chrome.sidePanel.open({ windowId: currentWindow.id });
-          sendResponse({ success: true });
+        if (message.targetTab) {
+          const tabStore = chrome.storage.session || chrome.storage.local;
+          await tabStore.set({ pendingSidePanelTab: message.targetTab }).catch(() => {});
         }
+        const windowId = sender.tab?.windowId || message.windowId || (await chrome.windows.getCurrent()).id;
+        await chrome.sidePanel.open({ windowId });
+        if (message.targetTab) {
+          chrome.runtime.sendMessage({ action: 'switchTab', tabId: message.targetTab }).catch(() => {});
+        }
+        sendResponse({ success: true });
       } else if (message.action === 'clearLogs') {
         await chrome.storage.local.set({ blockLogs: [], blockedCount: 0 });
         await chrome.action.setBadgeText({ text: '' });
         sendResponse({ success: true });
       } else if (message.action === 'saveSemanticRule') {
         const { semanticRules = [] } = await chrome.storage.local.get('semanticRules');
-        semanticRules.push(message.rule);
+        const rule = {
+          id: message.rule?.id || `sig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          ...message.rule,
+        };
+        semanticRules.push(rule);
         await chrome.storage.local.set({ semanticRules });
-        sendResponse({ success: true, count: semanticRules.length });
+        try {
+          await chrome.storage.sync.set({ semanticRules });
+        } catch (_) {}
+        sendResponse({ success: true, count: semanticRules.length, rule });
+      } else if (message.action === 'deleteSemanticRule') {
+        const { semanticRules = [] } = await chrome.storage.local.get('semanticRules');
+        let nextRules = semanticRules;
+        if (message.id) {
+          nextRules = semanticRules.filter((r) => r.id !== message.id);
+        } else if (typeof message.index === 'number') {
+          nextRules = semanticRules.filter((_, idx) => idx !== message.index);
+        }
+        await chrome.storage.local.set({ semanticRules: nextRules });
+        try {
+          await chrome.storage.sync.set({ semanticRules: nextRules });
+        } catch (_) {}
+        sendResponse({ success: true, count: nextRules.length });
       } else {
         sendResponse({ status: 'unknown_action' });
       }
@@ -202,5 +310,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: false, error: err.message });
     }
   })();
-  return true; // Keep message channel open for async response
+  return true;
 });

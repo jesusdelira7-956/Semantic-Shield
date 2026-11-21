@@ -1,13 +1,14 @@
 /**
  * Semantic Shield - Content Shield Script
- * Enforces cosmetic hiding, GenAI widget blocking, self-healing semantic suppression,
- * and AI sludge collapsing with high-performance requestAnimationFrame batching.
+ * Enforces validated cosmetic hiding, catalog-driven GenAI widget blocking,
+ * domain-scoped self-healing semantic suppression, and AI sludge collapsing
+ * with debounced MutationObserver + WeakSet tracking.
+ * Classic content script (no top-level ES module export/import).
  */
 
 (async function () {
   'use strict';
 
-  // State
   let config = {
     shieldActive: true,
     blockGenAI: true,
@@ -16,7 +17,11 @@
     semanticRules: [],
   };
 
-  // Load config
+  // Track checked / suppressed nodes without mutating DOM attributes
+  const suppressedNodes = new WeakSet();
+  const checkedSludgeNodes = new WeakSet();
+  let lastAppliedCss = '';
+
   try {
     const stored = await chrome.storage.local.get([
       'shieldActive',
@@ -26,11 +31,8 @@
       'semanticRules',
     ]);
     config = { ...config, ...stored };
-  } catch (e) {
-    // Fallback defaults
-  }
+  } catch (_) {}
 
-  // Listen for setting changes
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     for (const key of Object.keys(changes)) {
@@ -44,82 +46,106 @@
   // Inject Base Anti-Ad & GenAI Suppression CSS
   const styleEl = document.createElement('style');
   styleEl.id = 'semantic-shield-style';
-  document.documentElement.appendChild(styleEl);
+  (document.head || document.documentElement).appendChild(styleEl);
 
   function updateDynamicStyles() {
     if (!config.shieldActive) {
-      styleEl.textContent = '';
+      if (lastAppliedCss !== '') {
+        styleEl.textContent = '';
+        lastAppliedCss = '';
+      }
       return;
     }
 
-    const currentHost = window.location.hostname;
-    const selectors = [];
+    const currentHost = window.location.hostname || '';
+    const rawSelectors = [];
 
     // 1. Generic & Domain Cosmetic Rules
     for (const rule of config.cosmeticRules || []) {
-      if (rule.domain === '*' || currentHost.includes(rule.domain)) {
-        selectors.push(rule.selector);
+      if (rule && rule.selector && (rule.domain === '*' || currentHost.includes(rule.domain))) {
+        rawSelectors.push(rule.selector);
       }
     }
 
-    // 2. Built-in GenAI Widget Selectors
-    if (config.blockGenAI) {
-      const GENAI_SELECTORS = [
-        // Google Search AI Overviews
-        'div[data-attrid*="wa:/g/"]',
-        'div[aria-label*="AI Overview"]',
-        'div.YzSd2e',
-        // YouTube Ask AI
-        'ytd-button-renderer:has(button[aria-label*="Ask"])',
-        'ytd-button-renderer:has(yt-icon[icon="sparkles"])',
-        // X/Twitter Grok
-        'a[data-testid="AppTabBar_Grok_Link"]',
-        'div[data-testid="GrokDrawer"]',
-        // Amazon Rufus
-        '#cr-rufus-desktop-container',
-        'div[data-component-type="s-ai-search-summary"]',
-        // LinkedIn AI Prompts
-        'div:has(> svg[data-test-icon="ai-sparkle"])',
-        'button:has(svg[data-test-icon="ai-sparkle"])',
-      ];
-      selectors.push(...GENAI_SELECTORS);
+    // 2. Single Source of Truth GenAI Catalog from SemanticHeuristics
+    if (config.blockGenAI && Array.isArray(window.GENAI_WIDGET_CATALOG)) {
+      for (const entry of window.GENAI_WIDGET_CATALOG) {
+        if (!entry.domain || currentHost.includes(entry.domain)) {
+          rawSelectors.push(...(entry.selectors || []));
+        }
+      }
     }
 
-    if (selectors.length > 0) {
-      styleEl.textContent = `${selectors.join(', ')} { display: none !important; opacity: 0 !important; pointer-events: none !important; }`;
-    } else {
-      styleEl.textContent = '';
+    // Validate every selector independently so one malformed rule never breaks the sheet
+    const validSelectors = [];
+    const seen = new Set();
+    const isValid = window.SemanticHeuristics?.isValidCssSelector;
+
+    for (const sel of rawSelectors) {
+      if (seen.has(sel)) continue;
+      seen.add(sel);
+      if (!isValid || isValid(sel)) {
+        validSelectors.push(sel);
+      }
+    }
+
+    const nextCss =
+      validSelectors.length > 0
+        ? `${validSelectors.join(', ')} { display: none !important; opacity: 0 !important; pointer-events: none !important; }`
+        : '';
+
+    if (nextCss !== lastAppliedCss) {
+      styleEl.textContent = nextCss;
+      lastAppliedCss = nextCss;
     }
   }
 
   updateDynamicStyles();
 
-  // Self-Healing & AI Sludge DOM Scan (Batched with requestAnimationFrame)
-  let scanScheduled = false;
+  // Debounced + rAF-batched DOM scan
+  let debounceTimer = null;
+  let rafPending = false;
 
   function scheduleDOMClean() {
-    if (scanScheduled || !config.shieldActive) return;
-    scanScheduled = true;
-    requestAnimationFrame(() => {
-      runDOMPass();
-      scanScheduled = false;
-    });
+    if (!config.shieldActive) {
+      updateDynamicStyles();
+      return;
+    }
+    if (debounceTimer) return;
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        runDOMPass();
+      });
+    }, 150);
   }
 
   function runDOMPass() {
     updateDynamicStyles();
+    if (!config.shieldActive) return;
 
-    // 1. Apply Self-Healing Semantic Signatures
-    if (config.semanticRules && config.semanticRules.length > 0) {
-      const allElements = document.querySelectorAll('div, section, article, aside, span, p');
-      for (let i = 0; i < allElements.length; i++) {
-        const el = allElements[i];
-        if (el.dataset.agShieldSuppressed) continue;
+    const currentHost = window.location.hostname || '';
+    const heuristics = window.SemanticHeuristics;
+    if (!heuristics) return;
 
-        for (const sig of config.semanticRules) {
-          if (window.SemanticHeuristics && window.SemanticHeuristics.matchesSignature(el, sig)) {
+    // 1. Apply Domain-Scoped Self-Healing Semantic Signatures (skip scan if none match this host)
+    const hostRules = (config.semanticRules || []).filter((sig) =>
+      heuristics.matchesHostname(sig, currentHost)
+    );
+
+    if (hostRules.length > 0) {
+      const candidates = document.querySelectorAll('div, section, article, aside, span, p');
+      for (let i = 0; i < candidates.length; i++) {
+        const el = candidates[i];
+        if (suppressedNodes.has(el)) continue;
+
+        for (const sig of hostRules) {
+          if (heuristics.matchesSignature(el, sig, currentHost)) {
             el.style.display = 'none';
-            el.dataset.agShieldSuppressed = 'true';
+            suppressedNodes.add(el);
             break;
           }
         }
@@ -131,12 +157,12 @@
       const textBlocks = document.querySelectorAll('article, .post, .entry-content, [data-testid="tweetText"]');
       for (let i = 0; i < textBlocks.length; i++) {
         const el = textBlocks[i];
-        if (el.dataset.agSludgeChecked) continue;
-        el.dataset.agSludgeChecked = 'true';
+        if (checkedSludgeNodes.has(el)) continue;
+        checkedSludgeNodes.add(el);
 
         const text = el.innerText || '';
-        if (text.length > 200 && window.SemanticHeuristics) {
-          const evalRes = window.SemanticHeuristics.evaluateSludgeScore(text);
+        if (text.length > 200) {
+          const evalRes = heuristics.evaluateSludgeScore(text);
           if (evalRes.isSludge) {
             collapseSludgeElement(el, evalRes.hits);
           }
@@ -146,8 +172,7 @@
   }
 
   function collapseSludgeElement(el, hits) {
-    if (el.dataset.agSludgeCollapsed) return;
-    el.dataset.agSludgeCollapsed = 'true';
+    if (!el.parentNode) return;
 
     const originalDisplay = el.style.display;
     el.style.display = 'none';
@@ -169,10 +194,17 @@
       transition: all 0.2s ease;
       font-family: system-ui, sans-serif;
     `;
-    banner.innerHTML = `
-      <span>⚡ <strong>Synthetic/AI Content Collapsed</strong> (${hits} formulaic patterns detected)</span>
-      <span style="color: #38bdf8; text-decoration: underline;">Click to reveal</span>
-    `;
+
+    const left = document.createElement('span');
+    const strong = document.createElement('strong');
+    strong.textContent = 'Synthetic/AI Content Collapsed';
+    left.append('⚡ ', strong, ` (${Number(hits)} formulaic patterns detected)`);
+
+    const right = document.createElement('span');
+    right.style.cssText = 'color: #38bdf8; text-decoration: underline;';
+    right.textContent = 'Click to reveal';
+
+    banner.append(left, right);
 
     banner.addEventListener('click', () => {
       el.style.display = originalDisplay;
@@ -183,8 +215,13 @@
   }
 
   // MutationObserver to clean dynamic SPA elements
-  const observer = new MutationObserver(() => {
-    scheduleDOMClean();
+  const observer = new MutationObserver((mutations) => {
+    // Ignore mutations triggered only by our own style tag or collapsed banners
+    for (const m of mutations) {
+      if (m.target === styleEl) continue;
+      scheduleDOMClean();
+      return;
+    }
   });
 
   if (document.body) {
@@ -192,14 +229,16 @@
     scheduleDOMClean();
   } else {
     document.addEventListener('DOMContentLoaded', () => {
-      observer.observe(document.body, { childList: true, subtree: true });
-      scheduleDOMClean();
+      if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+        scheduleDOMClean();
+      }
     });
   }
 
   // Listen for picker activation message
-  chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    if (req.action === 'launchElementPicker') {
+  chrome.runtime.onMessage.addListener((req, _sender, sendResponse) => {
+    if (req && req.action === 'launchElementPicker') {
       if (window.SemanticShieldElementPicker) {
         window.SemanticShieldElementPicker.start();
         sendResponse({ started: true });

@@ -7,15 +7,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
-  tabBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      tabBtns.forEach((b) => b.classList.remove('active'));
-      tabContents.forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      const target = document.getElementById(btn.dataset.tab);
-      if (target) target.classList.add('active');
+  function activateTab(tabId) {
+    if (!tabId) return;
+    const target = document.getElementById(tabId);
+    if (!target) return;
+    tabBtns.forEach((b) => {
+      b.classList.toggle('active', b.dataset.tab === tabId);
     });
+    tabContents.forEach((c) => {
+      c.classList.toggle('active', c.id === tabId);
+    });
+  }
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
   });
+
+  // Honor pending targetTab when opened from Popup ("Help & Report Issue")
+  try {
+    const tabStore = chrome.storage.session || chrome.storage.local;
+    const { pendingSidePanelTab } = await tabStore.get('pendingSidePanelTab');
+    if (pendingSidePanelTab) {
+      activateTab(pendingSidePanelTab);
+      await tabStore.remove('pendingSidePanelTab');
+    }
+  } catch (_) {}
 
   // -------------------------------------------------------------
   // 1. My Filters Editor
@@ -38,8 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     chrome.runtime.sendMessage({ action: 'recompileFilters', filterText }, (res) => {
       if (res?.success) {
-        compileStatus.textContent = `Compiled successfully! ${res.dynamicCount} dynamic network rules + ${res.cosmeticCount} cosmetic rules active.`;
-        compileStatus.style.color = '#10b981';
+        const errSuffix = res.errors && res.errors.length > 0 ? ` (${res.errors.length} notice: ${res.errors[0]})` : '';
+        compileStatus.textContent = `Compiled! ${res.dynamicCount} dynamic network rules + ${res.cosmeticCount} cosmetic rules active.${errSuffix}`;
+        compileStatus.style.color = res.errors?.length ? '#f59e0b' : '#10b981';
       } else {
         compileStatus.textContent = `Compilation error: ${res?.error || 'Unknown'}`;
         compileStatus.style.color = '#ef4444';
@@ -48,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // -------------------------------------------------------------
-  // 2. Real-Time Network Request Logger
+  // 2. Real-Time Network Request Logger (XSS-safe DOM creation)
   // -------------------------------------------------------------
   const loggerTbody = document.getElementById('logger-tbody');
   const btnClearLogs = document.getElementById('btn-clear-logs');
@@ -56,8 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let allLogs = [];
 
-  // Store builds omit `declarativeNetRequestFeedback` (least privilege), so the
-  // per-request stream is only available when loaded unpacked in developer mode.
   const liveStreamAvailable = Boolean(chrome.declarativeNetRequest?.onRuleMatchedDebug);
   const loggerSubtitle = document.getElementById('logger-subtitle');
   if (!liveStreamAvailable && loggerSubtitle) {
@@ -70,36 +85,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderLogs();
 
   function renderLogs() {
-    loggerTbody.innerHTML = '';
+    loggerTbody.replaceChildren();
     const query = (logSearch.value || '').toLowerCase();
     const filtered = allLogs.filter((entry) => {
       if (!query) return true;
       return (
-        entry.url.toLowerCase().includes(query) ||
-        entry.initiator.toLowerCase().includes(query) ||
-        String(entry.ruleId).includes(query)
+        String(entry.url || '').toLowerCase().includes(query) ||
+        String(entry.initiator || '').toLowerCase().includes(query) ||
+        String(entry.ruleId || '').includes(query)
       );
     });
 
     if (filtered.length === 0) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">No blocked requests recorded yet. Browse the web to see real-time blocks.</td>`;
+      const td = document.createElement('td');
+      td.colSpan = 5;
+      td.style.cssText = 'text-align: center; color: #64748b; padding: 20px;';
+      td.textContent = 'No blocked requests recorded yet. Browse the web to see real-time blocks.';
+      tr.appendChild(td);
       loggerTbody.appendChild(tr);
       return;
     }
 
     filtered.slice(0, 100).forEach((entry) => {
       const tr = document.createElement('tr');
-      const truncatedUrl = entry.url.length > 55 ? entry.url.substring(0, 55) + '...' : entry.url;
-      const cleanInitiator = entry.initiator.replace(/^https?:\/\//, '');
 
-      tr.innerHTML = `
-        <td style="color: #64748b;">${entry.timestamp}</td>
-        <td><span class="badge-blocked">${entry.type}</span></td>
-        <td title="${entry.url}">${truncatedUrl}</td>
-        <td><span class="badge-rule">#${entry.ruleId}</span></td>
-        <td style="color: #94a3b8;">${cleanInitiator}</td>
-      `;
+      const tdTime = document.createElement('td');
+      tdTime.style.color = '#64748b';
+      tdTime.textContent = String(entry.timestamp || '');
+
+      const tdType = document.createElement('td');
+      const typeSpan = document.createElement('span');
+      typeSpan.className = 'badge-blocked';
+      typeSpan.textContent = String(entry.type || 'other');
+      tdType.appendChild(typeSpan);
+
+      const urlStr = String(entry.url || '');
+      const tdUrl = document.createElement('td');
+      tdUrl.title = urlStr;
+      tdUrl.textContent = urlStr.length > 55 ? `${urlStr.slice(0, 55)}...` : urlStr;
+
+      const tdRule = document.createElement('td');
+      const ruleSpan = document.createElement('span');
+      ruleSpan.className = 'badge-rule';
+      ruleSpan.textContent = `#${entry.ruleId}`;
+      tdRule.appendChild(ruleSpan);
+
+      const tdInit = document.createElement('td');
+      tdInit.style.color = '#94a3b8';
+      tdInit.textContent = String(entry.initiator || '').replace(/^https?:\/\//, '');
+
+      tr.append(tdTime, tdType, tdUrl, tdRule, tdInit);
       loggerTbody.appendChild(tr);
     });
   }
@@ -113,46 +149,107 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Listen for live blocked requests broadcasted from background worker
+  // Listen for live runtime events (logs or switchTab requests)
   chrome.runtime.onMessage.addListener((message) => {
     if (message.action === 'newBlockLog' && message.entry) {
       allLogs.unshift(message.entry);
       if (allLogs.length > 150) allLogs.pop();
       renderLogs();
+    } else if (message.action === 'switchTab' && message.tabId) {
+      activateTab(message.tabId);
     }
   });
 
   // -------------------------------------------------------------
-  // 3. Self-Healing DOM Signatures
+  // 3. Self-Healing DOM Signatures (XSS-safe + domain-scoped + deletable)
   // -------------------------------------------------------------
   const semanticList = document.getElementById('semantic-list');
   const btnClearSemantic = document.getElementById('btn-clear-semantic');
 
   async function loadSemanticRules() {
-    semanticList.innerHTML = '';
+    semanticList.replaceChildren();
     const { semanticRules = [] } = await chrome.storage.local.get('semanticRules');
 
     if (semanticRules.length === 0) {
-      semanticList.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px; font-size: 11px;">No custom element signatures saved yet. Use the "Pick & Heal Element" button in the popup to block resilient elements.</div>`;
+      const empty = document.createElement('div');
+      empty.style.cssText = 'text-align: center; color: #64748b; padding: 20px; font-size: 11px;';
+      empty.textContent =
+        'No custom element signatures saved yet. Use the "Pick & Heal Element" button in the popup to block resilient elements.';
+      semanticList.appendChild(empty);
       return;
     }
 
     semanticRules.forEach((sig, idx) => {
       const card = document.createElement('div');
       card.className = 'semantic-card';
+
+      const header = document.createElement('div');
+      header.className = 'semantic-card-header';
+
+      const leftGroup = document.createElement('div');
+      leftGroup.style.cssText = 'display: flex; align-items: center; gap: 6px;';
+
+      const tagSpan = document.createElement('span');
+      tagSpan.className = 'semantic-tag';
+      tagSpan.textContent = `<${sig.tagName || 'div'}>`;
+
+      const hostBadge = document.createElement('span');
+      hostBadge.className = 'port-tag';
+      hostBadge.style.cssText = 'font-size: 9px; padding: 1px 6px;';
+      hostBadge.textContent = sig.hostname || 'Global';
+
+      leftGroup.append(tagSpan, hostBadge);
+
+      const rightGroup = document.createElement('div');
+      rightGroup.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+
+      const dateSpan = document.createElement('span');
+      dateSpan.style.cssText = 'font-size: 10px; color: #64748b;';
+      dateSpan.textContent = new Date(sig.created || Date.now()).toLocaleDateString();
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.title = 'Delete signature';
+      delBtn.style.cssText = 'background: transparent; border: none; color: #ef4444; cursor: pointer; font-weight: 700;';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: 'deleteSemanticRule', id: sig.id, index: idx }, () => {
+          loadSemanticRules();
+        });
+      });
+
+      rightGroup.append(dateSpan, delBtn);
+      header.append(leftGroup, rightGroup);
+      card.appendChild(header);
+
+      const pathDiv = document.createElement('div');
+      pathDiv.className = 'semantic-desc';
+      const pathStrong = document.createElement('strong');
+      pathStrong.textContent = 'Path: ';
+      pathDiv.append(pathStrong, String(sig.structure || ''));
+      card.appendChild(pathDiv);
+
       const attrsStr = Object.entries(sig.semanticAttrs || {})
         .map(([k, v]) => `${k}="${v}"`)
         .join(', ');
+      if (attrsStr) {
+        const attrDiv = document.createElement('div');
+        attrDiv.className = 'semantic-desc';
+        const attrStrong = document.createElement('strong');
+        attrStrong.textContent = 'Attrs: ';
+        attrDiv.append(attrStrong, attrsStr);
+        card.appendChild(attrDiv);
+      }
 
-      card.innerHTML = `
-        <div class="semantic-card-header">
-          <span class="semantic-tag">&lt;${sig.tagName}&gt;</span>
-          <span style="font-size: 10px; color: #64748b;">${new Date(sig.created || Date.now()).toLocaleDateString()}</span>
-        </div>
-        <div class="semantic-desc"><strong>Path:</strong> ${sig.structure}</div>
-        ${attrsStr ? `<div class="semantic-desc"><strong>Attrs:</strong> ${attrsStr}</div>` : ''}
-        ${sig.textSnippet ? `<div class="semantic-desc"><strong>Anchor:</strong> "${sig.textSnippet}"</div>` : ''}
-      `;
+      if (sig.textSnippet) {
+        const anchorDiv = document.createElement('div');
+        anchorDiv.className = 'semantic-desc';
+        const anchorStrong = document.createElement('strong');
+        anchorStrong.textContent = 'Anchor: ';
+        anchorDiv.append(anchorStrong, `"${sig.textSnippet}"`);
+        card.appendChild(anchorDiv);
+      }
+
       semanticList.appendChild(card);
     });
   }
@@ -161,6 +258,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   btnClearSemantic.addEventListener('click', async () => {
     await chrome.storage.local.set({ semanticRules: [] });
+    try {
+      await chrome.storage.sync.set({ semanticRules: [] });
+    } catch (_) {}
     loadSemanticRules();
   });
 
@@ -177,7 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const stored = await chrome.storage.local.get(null);
         const backupData = {
           app: 'Semantic Shield',
-          version: '2.0.0',
+          version: chrome.runtime.getManifest().version,
           exportedAt: new Date().toISOString(),
           userFilters: stored.userFilters || '',
           semanticRules: stored.semanticRules || [],
@@ -230,7 +330,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           await chrome.storage.local.set(updates);
 
-          // Trigger recompile of restored filters
           if (updates.userFilters) {
             chrome.runtime.sendMessage({ action: 'recompileFilters', filterText: updates.userFilters });
           }
@@ -263,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const diagBundle = {
           extension: 'Semantic Shield',
-          version: '2.0.2',
+          version: chrome.runtime.getManifest().version,
           timestamp: new Date().toISOString(),
           userAgent: navigator.userAgent,
           shieldActive: stored.shieldActive !== false,

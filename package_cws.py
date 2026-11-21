@@ -3,18 +3,16 @@
 package_cws.py
 ==============
 Packages Semantic Shield into a clean, compliant ZIP file
-ready for direct upload to the Google Chrome Web Store Developer Dashboard.
+ready for direct upload to the Google Chrome Web Store Developer Dashboard
+and GitHub Releases.
 
-Excludes:
-- .git / .github
-- test_extension.py / package_cws.py
-- .gitignore / README.md / CHROMEWEBSTORE.md
-- dist/ and local caches
+Excludes dev/test/workflow files and strips dev-only permissions.
 """
 
 import os
 import sys
 import json
+import shutil
 import zipfile
 from pathlib import Path
 
@@ -25,7 +23,7 @@ DIST_DIR = EXT_DIR / "dist"
 DIST_DIR.mkdir(parents=True, exist_ok=True)
 CWS_ZIP = DIST_DIR / "semantic-shield-cws-upload.zip"
 
-EXCLUDE_DIRS = {".git", ".github", "__pycache__", "dist", "_metadata"}
+EXCLUDE_DIRS = {".git", ".github", "__pycache__", "dist", "_metadata", "tests", "scripts", "node_modules"}
 EXCLUDE_FILES = {
     "test_extension.py",
     "package_cws.py",
@@ -35,10 +33,15 @@ EXCLUDE_FILES = {
     "CHROMEWEBSTORE.md",
     "install.sh",
     "install.ps1",
+    "package.json",
+    "package-lock.json",
 }
 
 def build_package():
-    print(f"[*] Packaging Chrome Web Store upload archive...")
+    manifest_data = json.loads((EXT_DIR / "manifest.json").read_text(encoding="utf-8"))
+    version = manifest_data.get("version", "2.0.2")
+
+    print(f"[*] Packaging Semantic Shield v{version} Chrome Web Store upload archive...")
     if CWS_ZIP.exists():
         CWS_ZIP.unlink()
 
@@ -50,7 +53,7 @@ def build_package():
                     continue
                 file_path = Path(root) / file
                 rel_path = file_path.relative_to(EXT_DIR)
-                
+
                 # Production Manifest sanitization for Chrome Web Store:
                 # Strips dev-only 'declarativeNetRequestFeedback' to prevent CWS policy rejection
                 if rel_path == Path("manifest.json"):
@@ -72,15 +75,20 @@ def build_package():
                         sys.exit(1)
 
                     zipf.writestr("manifest.json", clean_manifest_bytes)
-                    print(f"  + manifest.json (CWS-sanitized: stripped dev-only declarativeNetRequestFeedback)")
+                    print("  + manifest.json (CWS-sanitized: stripped dev-only declarativeNetRequestFeedback)")
                     continue
 
                 zipf.write(file_path, arcname=str(rel_path))
                 print(f"  + {rel_path}")
 
+    versioned_zip = DIST_DIR / f"Semantic-Shield-v{version}.zip"
+    shutil.copy2(CWS_ZIP, versioned_zip)
+
     size_kb = round(CWS_ZIP.stat().st_size / 1024, 2)
     print(f"\n[+] Chrome Web Store upload ZIP ready at:")
     print(f"    {CWS_ZIP} ({size_kb} KB)")
+    print(f"[+] Versioned release ZIP ready at:")
+    print(f"    {versioned_zip} ({size_kb} KB)")
 
 if __name__ == "__main__":
     build_package()
